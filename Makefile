@@ -1,5 +1,5 @@
 BUILD_SLN=./jaytwo.DataAccess.sln
-BUILD_DIRS=./src/jaytwo.DataAccess:./src/jaytwo.DataAccess.MySql:./src/jaytwo.DataAccess.Postgres:./src/jaytwo.DataAccess.RedLock
+BUILD_DIRS=./src/jaytwo.DataAccess:./src/jaytwo.DataAccess.MySql:./src/jaytwo.DataAccess.Postgres
 BUILD_TEST_DIRS=./test/jaytwo.DataAccess.Tests
 
 NUGET_SOURCE_URL?=https://api.nuget.org/v3/index.json
