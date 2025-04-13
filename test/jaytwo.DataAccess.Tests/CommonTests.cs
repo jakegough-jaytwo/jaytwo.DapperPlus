@@ -37,6 +37,29 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    public async Task CanQueryUnbufferedAsync(string moniker)
+    {
+        // arrange
+        var key = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow);
+
+        // act
+        var rows = await dataAccess.SelectSamplesUnbufferedAsync(key);
+
+        // assert
+        var row = Assert.Single(rows)!;
+        Assert.Equal(key, row.SampleId);
+        Assert.Equal(value, row.Value!.Value, precision: 4);
+        Assert.Equal(utcNow, row.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+    }
+
+    [Theory]
+    [InlineData(Monikers.MySql)]
+    [InlineData(Monikers.Postgres)]
     public async Task CanQueryAsync(string moniker)
     {
         // arrange
@@ -55,6 +78,55 @@ public class CommonTests : IClassFixture<TestFixture>
         Assert.Equal(key, row.SampleId);
         Assert.Equal(value, row.Value!.Value, precision: 4);
         Assert.Equal(utcNow, row.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+    }
+
+    [Theory]
+    [InlineData(Monikers.MySql)]
+    [InlineData(Monikers.Postgres)]
+    public async Task CanQuerySingleAsync(string moniker)
+    {
+        // arrange
+        var key = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+        var missingKey = Guid.NewGuid().ToString();
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow);
+
+        // act
+        var row = await dataAccess.SelectSampleAsync(key);
+        var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() => dataAccess.SelectSampleAsync(missingKey));
+
+        // assert
+        Assert.Equal(key, row.SampleId);
+        Assert.Equal(value, row.Value!.Value, precision: 4);
+        Assert.Equal(utcNow, row.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+    }
+
+    [Theory]
+    [InlineData(Monikers.MySql)]
+    [InlineData(Monikers.Postgres)]
+    public async Task CanQuerySingleOrDefaultAsync(string moniker)
+    {
+        // arrange
+        var key = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+        var missingKey = Guid.NewGuid().ToString();
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow);
+
+        // act
+        var foundRow = await dataAccess.SelectSampleAsync(key);
+        var missingRow = await dataAccess.SelectSampleOrDefaultAsync(missingKey);
+
+        // assert
+        Assert.Equal(key, foundRow.SampleId);
+        Assert.Equal(value, foundRow.Value!.Value, precision: 4);
+        Assert.Equal(utcNow, foundRow.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+        Assert.Null(missingRow);
     }
 
     [Theory]

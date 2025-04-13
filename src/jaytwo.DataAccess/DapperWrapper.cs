@@ -249,7 +249,7 @@ public class DapperWrapper
 
             try
             {
-                var rows = connection.QueryUnbufferedAsync(
+                var rows = connection.QueryUnbufferedAsync<T>(
                     commandText,
                     parameters,
                     transaction,

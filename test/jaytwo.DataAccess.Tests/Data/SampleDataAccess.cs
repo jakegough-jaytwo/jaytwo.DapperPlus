@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Linq;
 using jaytwo.DataAccess.Tests.Data.Models;
 
 namespace jaytwo.DataAccess.Tests.Data;
@@ -28,8 +29,32 @@ public class SampleDataAccess
     {
         var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
         var args = new { sample_id = sampleId };
-        var rows = await QueryAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
-        return rows;
+        var result = await QueryAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        return result;
+    }
+
+    public async Task<IList<SampleRow>> SelectSamplesUnbufferedAsync(string sampleId, DbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
+        var args = new { sample_id = sampleId };
+        var result = QueryUnbufferedAsync<SampleRow>(sql, args, transaction);
+        return await result.ToListAsync(cancellationToken);
+    }
+
+    public async Task<SampleRow> SelectSampleAsync(string sampleId, DbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
+        var args = new { sample_id = sampleId };
+        var result = await QuerySingleAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        return result;
+    }
+
+    public async Task<SampleRow?> SelectSampleOrDefaultAsync(string sampleId, DbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
+        var args = new { sample_id = sampleId };
+        var result = await QuerySingleOrDefaultAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        return result;
     }
 
     public async Task<DateTime?> GetAsOfDateAsync(string sampleId, DbTransaction? transaction = null, CancellationToken cancellationToken = default)
