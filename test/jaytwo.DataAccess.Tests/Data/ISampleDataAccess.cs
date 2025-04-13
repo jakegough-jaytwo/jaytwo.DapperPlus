@@ -1,11 +1,13 @@
-using System.Data;
+using System.Data.Common;
 using jaytwo.DataAccess.Tests.Data.Models;
 
 namespace jaytwo.DataAccess.Tests.Data;
 
-public interface ISampleDataAccess
+public interface ISampleDataAccess : IDapperWrapperDataAccess
 {
-    Task<int> InsertSample(string sampleId, double value, DateTime asOfDateUtc, IDbTransaction? transaction = default, CancellationToken cancellationToken = default);
+    Task<int> InsertSampleAsync(string sampleId, double value, DateTime asOfDateUtc, DbTransaction? transaction = default, CancellationToken cancellationToken = default);
 
-    Task<IList<SampleRow>> SelectSamples(string foo, IDbTransaction? transaction = default, CancellationToken cancellationToken = default);
+    Task<IList<SampleRow>> SelectSamplesAsync(string foo, DbTransaction? transaction = default, CancellationToken cancellationToken = default);
+
+    Task<DateTime?> GetAsOfDateAsync(string sampleId, DbTransaction? transaction = null, CancellationToken cancellationToken = default);
 }

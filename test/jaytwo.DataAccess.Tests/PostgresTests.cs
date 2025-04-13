@@ -1,5 +1,4 @@
-using System;
-using System.Threading.Tasks;
+using jaytwo.DataAccess.Postgres;
 using Npgsql;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,20 +8,22 @@ namespace jaytwo.DataAccess.Tests;
 public class PostgresTests : IClassFixture<TestFixture>
 {
     private readonly ITestOutputHelper _output;
-    private readonly string _connectionString;
+    private readonly IPostgresDapperWrapper _postgres;
 
     public PostgresTests(TestFixture fixture, ITestOutputHelper output)
     {
-        _connectionString = fixture.PostgresConnectionString;
+        _postgres = fixture.PostgresDapperWrapper;
         _output = output;
     }
 
     [Fact]
     public void ConnectionStringHasDetails()
     {
-        _output.WriteLine("Connection Sring: " + _connectionString);
+        using var connection = _postgres.CreateConnection();
+        var connectionString = connection.ConnectionString;
+        _output.WriteLine("Connection Sring: " + _postgres.CreateConnection().ConnectionString);
 
-        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(_connectionString!);
+        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString!);
 
         Assert.NotNull(connectionStringBuilder.Host);
         Assert.NotNull(connectionStringBuilder.Database);
@@ -33,10 +34,25 @@ public class PostgresTests : IClassFixture<TestFixture>
     [Fact]
     public async Task CanConnect()
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        using var connection = _postgres.CreateConnection();
 
         await connection.OpenAsync();
 
         Assert.Equal(System.Data.ConnectionState.Open, connection.State);
+    }
+
+    [Fact]
+    public async Task HealthCheckAsync()
+    {
+        // Arrange
+
+        // Act
+        var healthCheck = await _postgres.HealthCheckAsync();
+
+        // Assert
+        Assert.NotNull(healthCheck);
+
+        var healthCheckJson = System.Text.Json.JsonSerializer.Serialize(healthCheck);
+        _output.WriteLine("Health Check: " + healthCheckJson);
     }
 }

@@ -1,0 +1,17 @@
+using Npgsql;
+
+namespace jaytwo.DataAccess.Postgres;
+
+public abstract class PostgresDapperWrapperDataAccess
+    : DataAccessBase<NpgsqlConnection, NpgsqlTransaction>, IPostgresDapperWrapperDataAccess
+{
+    public PostgresDapperWrapperDataAccess(string defaultConnectionString)
+        : base(new PostgresDapperWrapper(defaultConnectionString))
+    {
+    }
+
+    public PostgresDapperWrapperDataAccess(IPostgresDapperWrapper dapperWrapper)
+        : base(dapperWrapper)
+    {
+    }
+}

@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using jaytwo.DataAccess.MySql;
 using jaytwo.DataAccess.Postgres;
 using Microsoft.Extensions.Configuration;
@@ -21,16 +19,18 @@ public class TestFixture
             .AddJsonFile($"testsettings.{TestEnvironment}.json", optional: true)
             .Build();
 
-        PostgresConnectionString = Configuration.GetConnectionString("PostgresDb")!;
+        var postgresConnectionString = Configuration.GetConnectionString("PostgresDb")!;
+        PostgresDapperWrapper = new PostgresDapperWrapper(postgresConnectionString);
 
-        MySqlConnectionString = Configuration.GetConnectionString("MySqlDb")!;
+        var mySqlConnectionString = Configuration.GetConnectionString("MySqlDb")!;
+        MySqlDapperWrapper = new MySqlDapperWrapper(mySqlConnectionString);
     }
 
     public IConfiguration Configuration { get; }
 
     public string? TestEnvironment { get; }
 
-    public string PostgresConnectionString { get; }
+    public IPostgresDapperWrapper PostgresDapperWrapper { get; }
 
-    public string MySqlConnectionString { get; }
+    public IMySqlDapperWrapper MySqlDapperWrapper { get; }
 }
