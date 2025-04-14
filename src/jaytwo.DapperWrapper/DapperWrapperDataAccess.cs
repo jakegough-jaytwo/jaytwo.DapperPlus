@@ -63,7 +63,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<int> ExecuteAsync(
         string commandText,
         DbTransaction? transaction,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
         => await ExecuteAsync(
             commandText: commandText,
             parameters: default,
@@ -171,7 +171,7 @@ public abstract class DapperWrapperDataAccess
             cancellationTimeoutSeconds: cancellationTimeoutSeconds,
             cancellationToken: cancellationToken);
 
-    protected async Task<IList<T>> QueryAsync<T>(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<IList<T>> QueryAsync<T>(string commandText, CancellationToken cancellationToken)
         => await QueryAsync<T>(
             commandText: commandText,
             parameters: default,
@@ -199,7 +199,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<IList<T>> QueryAsync<T>(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QueryAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -214,7 +214,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QueryAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -244,7 +244,7 @@ public abstract class DapperWrapperDataAccess
             prototype: prototype,
             cancellationToken: cancellationToken);
 
-    protected async Task<T?> QuerySingleOrDefaultAsync<T>(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<T?> QuerySingleOrDefaultAsync<T>(string commandText, CancellationToken cancellationToken)
         => await QuerySingleOrDefaultAsync<T>(
             commandText: commandText,
             parameters: default,
@@ -272,7 +272,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<T?> QuerySingleOrDefaultAsync<T>(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QuerySingleOrDefaultAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -287,7 +287,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QuerySingleOrDefaultAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -317,7 +317,7 @@ public abstract class DapperWrapperDataAccess
             prototype: prototype,
             cancellationToken: cancellationToken);
 
-    protected async Task<T> QuerySingleAsync<T>(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<T> QuerySingleAsync<T>(string commandText, CancellationToken cancellationToken)
         => await QuerySingleAsync<T>(
             commandText: commandText,
             parameters: default,
@@ -345,7 +345,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<T> QuerySingleAsync<T>(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QuerySingleAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -360,7 +360,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QuerySingleAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -459,47 +459,12 @@ public abstract class DapperWrapperDataAccess
 
 #if NET5_0_OR_GREATER
 
-    protected IAsyncEnumerable<T> QueryUnbufferedAsync<T>(string commandText)
-        => QueryUnbufferedAsync<T>(
-            commandText: commandText,
-            parameters: default,
-            transaction: default,
-            commandTimeoutSeconds: default,
-            commandType: default,
-            cancellationTimeoutSeconds: default,
-            prototype: default);
-
     protected IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
         string commandText,
         DbTransaction? transaction)
         => QueryUnbufferedAsync<T>(
             commandText: commandText,
             parameters: default,
-            transaction: transaction,
-            commandTimeoutSeconds: default,
-            commandType: default,
-            cancellationTimeoutSeconds: default,
-            prototype: default);
-
-    protected IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
-        string commandText,
-        object? parameters)
-        => QueryUnbufferedAsync<T>(
-            commandText: commandText,
-            parameters: parameters,
-            transaction: default,
-            commandTimeoutSeconds: default,
-            commandType: default,
-            cancellationTimeoutSeconds: default,
-            prototype: default);
-
-    protected IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
-        string commandText,
-        object? parameters,
-        DbTransaction? transaction)
-        => QueryUnbufferedAsync<T>(
-            commandText: commandText,
-            parameters: parameters,
             transaction: transaction,
             commandTimeoutSeconds: default,
             commandType: default,
@@ -511,8 +476,8 @@ public abstract class DapperWrapperDataAccess
         object? parameters = default,
         DbTransaction? transaction = default,
         int? commandTimeoutSeconds = default,
-        int? cancellationTimeoutSeconds = default,
         CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default)
         => Dapper.QueryUnbufferedAsync<T>(
             commandText: commandText,

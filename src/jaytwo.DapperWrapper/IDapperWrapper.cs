@@ -79,8 +79,8 @@ public interface IDapperWrapper
         object? parameters = default,
         DbTransaction? transaction = default,
         int? commandTimeoutSeconds = default,
-        int? cancellationTimeoutSeconds = default,
         CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default);
 #endif
 }
