@@ -1,6 +1,6 @@
 library 'JenkinsBuilderLibrary'
 
-helper.loadNuGetProjectDefaults('jaytwo.DataAccess')
+helper.loadNuGetProjectDefaults('jaytwo.DapperWrapper')
 
 def nuGetCredentialsId = 'nuget-org-jaytwo'
 
