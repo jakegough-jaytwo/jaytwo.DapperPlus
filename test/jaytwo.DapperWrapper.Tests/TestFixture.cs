@@ -1,5 +1,6 @@
 using jaytwo.DapperWrapper.MySql;
 using jaytwo.DapperWrapper.Postgres;
+using jaytwo.DapperWrapper.SqlServer;
 using Microsoft.Extensions.Configuration;
 
 namespace jaytwo.DapperWrapper.Tests;
@@ -24,6 +25,9 @@ public class TestFixture
 
         var mySqlConnectionString = Configuration.GetConnectionString("MySqlDb")!;
         MySqlDapperWrapper = new MySqlDapperWrapper(mySqlConnectionString);
+
+        var sqlServerConnectionString = Configuration.GetConnectionString("SqlServerDb")!;
+        SqlServerDapperWrapper = new SqlServerDapperWrapper(sqlServerConnectionString);
     }
 
     public IConfiguration Configuration { get; }
@@ -33,4 +37,6 @@ public class TestFixture
     public IPostgresDapperWrapper PostgresDapperWrapper { get; }
 
     public IMySqlDapperWrapper MySqlDapperWrapper { get; }
+
+    public ISqlServerDapperWrapper SqlServerDapperWrapper { get; }
 }

@@ -1,2 +1,10 @@
 FROM mysql:latest
+
 COPY mysql-init /docker-entrypoint-initdb.d
+
+CMD [ "--bind-address=0.0.0.0" ]
+
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=mydb
+ENV MYSQL_USER=myuser
+ENV MYSQL_PASSWORD=mypass

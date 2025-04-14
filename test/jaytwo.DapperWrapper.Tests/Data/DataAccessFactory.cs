@@ -1,5 +1,6 @@
 using jaytwo.DapperWrapper.MySql;
 using jaytwo.DapperWrapper.Postgres;
+using jaytwo.DapperWrapper.SqlServer;
 
 namespace jaytwo.DapperWrapper.Tests.Data;
 
@@ -9,10 +10,12 @@ public class DataAccessFactory
 
     public DataAccessFactory(
         IMySqlDapperWrapper mySqlDapperWrapper,
-        IPostgresDapperWrapper postgresDapperWrapper)
+        IPostgresDapperWrapper postgresDapperWrapper,
+        ISqlServerDapperWrapper sqlServerDapperWrapper)
         : this(
             (Monikers.MySql, () => new SampleDataAccess(mySqlDapperWrapper)),
-            (Monikers.Postgres, () => new SampleDataAccess(postgresDapperWrapper)))
+            (Monikers.Postgres, () => new SampleDataAccess(postgresDapperWrapper)),
+            (Monikers.SqlServer, () => new SampleDataAccess(sqlServerDapperWrapper)))
     {
     }
 

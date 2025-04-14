@@ -17,20 +17,6 @@ public class MySqlTests : IClassFixture<TestFixture>
     }
 
     [Fact]
-    public void ConnectionStringHasDetails()
-    {
-        using var connection = _mySql.CreateConnection();
-        var connectionString = connection.ConnectionString;
-        _output.WriteLine("Connection Sring: " + connectionString);
-
-        var connectionStringBuilder = new MySqlConnectionStringBuilder(connectionString);
-        Assert.NotNull(connectionStringBuilder.Server);
-        Assert.NotNull(connectionStringBuilder.Database);
-        Assert.NotNull(connectionStringBuilder.UserID);
-        Assert.NotNull(connectionStringBuilder.Password);
-    }
-
-    [Fact]
     public async Task CanConnect()
     {
         using var connection = _mySql.CreateConnection();

@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\src\jaytwo.DapperWrapper\jaytwo.DapperWrapper.csproj" />
     <ProjectReference Include="..\..\src\jaytwo.DapperWrapper.MySql\jaytwo.DapperWrapper.MySql.csproj" />
     <ProjectReference Include="..\..\src\jaytwo.DapperWrapper.Postgres\jaytwo.DapperWrapper.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\jaytwo.DapperWrapper.SqlServer\jaytwo.DapperWrapper.SqlServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

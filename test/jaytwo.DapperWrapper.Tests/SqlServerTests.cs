@@ -1,25 +1,25 @@
-using jaytwo.DapperWrapper.Postgres;
-using Npgsql;
+using jaytwo.DapperWrapper.SqlServer;
+using Microsoft.Data.SqlClient;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace jaytwo.DapperWrapper.Tests;
 
-public class PostgresTests : IClassFixture<TestFixture>
+public class SqlServerTests : IClassFixture<TestFixture>
 {
     private readonly ITestOutputHelper _output;
-    private readonly IPostgresDapperWrapper _postgres;
+    private readonly ISqlServerDapperWrapper _sqlServer;
 
-    public PostgresTests(TestFixture fixture, ITestOutputHelper output)
+    public SqlServerTests(TestFixture fixture, ITestOutputHelper output)
     {
-        _postgres = fixture.PostgresDapperWrapper;
+        _sqlServer = fixture.SqlServerDapperWrapper;
         _output = output;
     }
 
     [Fact]
     public async Task CanConnect()
     {
-        using var connection = _postgres.CreateConnection();
+        using var connection = _sqlServer.CreateConnection();
 
         await connection.OpenAsync();
 
@@ -32,7 +32,7 @@ public class PostgresTests : IClassFixture<TestFixture>
         // Arrange
 
         // Act
-        var healthCheck = await _postgres.HealthCheckAsync();
+        var healthCheck = await _sqlServer.HealthCheckAsync();
 
         // Assert
         Assert.NotNull(healthCheck);

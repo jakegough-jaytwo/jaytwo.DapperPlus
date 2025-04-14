@@ -1,6 +1,7 @@
 {
   "ConnectionStrings": {
     "PostgresDb": "server=localhost;port=55432;database=pgdb;uid=pguser;pwd=pgpass",
-    "MySqlDb": "server=localhost;port=53306;database=mydb;uid=myuser;pwd=mypass"
+    "MySqlDb": "server=localhost;port=53306;database=mydb;uid=myuser;pwd=mypass",
+    "SqlServerDb": "Data Source=localhost,1433;TrustServerCertificate=true;Initial Catalog=tester-db;User ID=sqluser;Password=sqlpass"
   }
 }

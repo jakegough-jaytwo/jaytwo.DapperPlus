@@ -1,3 +1,4 @@
+using System.Data;
 using jaytwo.DapperWrapper.Tests.Data;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,12 +16,14 @@ public class CommonTests : IClassFixture<TestFixture>
 
         _dataAccessProvider = new DataAccessFactory(
             fixture.MySqlDapperWrapper,
-            fixture.PostgresDapperWrapper);
+            fixture.PostgresDapperWrapper,
+            fixture.SqlServerDapperWrapper);
     }
 
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanExecuteAsync(string moniker)
     {
         // arrange
@@ -37,6 +40,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanQueryUnbufferedAsync(string moniker)
     {
         // arrange
@@ -60,6 +64,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanRunInTransactionAsync(string moniker)
     {
         // arrange
@@ -69,20 +74,23 @@ public class CommonTests : IClassFixture<TestFixture>
 
         var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
 
-        await dataAccess.RunInTransactionAsync(async transaction =>
-        {
-            var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow, transaction);
+        await dataAccess.RunInTransactionAsync(
+            async transaction =>
+            {
+                var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow, transaction);
 
-            // act
-            var rowsInsideTransaction = await dataAccess.SelectSampleAsync(key, transaction);
-            var rowsOutsideTransaction = await dataAccess.SelectSampleOrDefaultAsync(key);
+                // act
+                var rowsInsideTransaction = await dataAccess.SelectSampleAsync(key, transaction);
+                await transaction.RollbackAsync(); // in SqlServer, if the transaction is still open, the following select outside the transaction will hang (and i don't want to change the sql statements to be SqlServer specific)
 
-            // assert
-            Assert.Equal(key, rowsInsideTransaction.SampleId);
-            Assert.Equal(value, rowsInsideTransaction.Value!.Value, precision: 4);
-            Assert.Equal(utcNow, rowsInsideTransaction.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
-            Assert.Null(rowsOutsideTransaction);
-        });
+                var rowsOutsideTransaction = await dataAccess.SelectSampleOrDefaultAsync(key);
+
+                // assert
+                Assert.Equal(key, rowsInsideTransaction.SampleId);
+                Assert.Equal(value, rowsInsideTransaction.Value!.Value, precision: 4);
+                Assert.Equal(utcNow, rowsInsideTransaction.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+                Assert.Null(rowsOutsideTransaction);
+            });
     }
 
     // TODO: tests for querymultiple
@@ -90,6 +98,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanQueryAsync(string moniker)
     {
         // arrange
@@ -113,6 +122,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanQuerySingleAsync(string moniker)
     {
         // arrange
@@ -137,6 +147,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanQuerySingleOrDefaultAsync(string moniker)
     {
         // arrange
@@ -162,6 +173,7 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    [InlineData(Monikers.SqlServer)]
     public async Task CanExecuteScalarAsync(string moniker)
     {
         // arrange

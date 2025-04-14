@@ -97,7 +97,7 @@ nuget-push:
 	done
 
 localdev:
-	docker compose --profile "localdev" up -d --wait --remove-orphans
+	docker compose --profile "localdev" up -d --wait --remove-orphans --build
 
 localdev-logs:
 	docker compose --profile "localdev" logs -f --tail=100
