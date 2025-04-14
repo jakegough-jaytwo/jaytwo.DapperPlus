@@ -20,10 +20,15 @@ public class CommonTests : IClassFixture<TestFixture>
             fixture.SqlServerDapperWrapper);
     }
 
+    public static object[][] GetMonikerTestCases() => new object[][]
+    {
+        new[] { Monikers.MySql },
+        new[] { Monikers.Postgres },
+        new[] { Monikers.SqlServer },
+    };
+
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanExecuteAsync(string moniker)
     {
         // arrange
@@ -38,9 +43,7 @@ public class CommonTests : IClassFixture<TestFixture>
     }
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanQueryUnbufferedAsync(string moniker)
     {
         // arrange
@@ -62,9 +65,7 @@ public class CommonTests : IClassFixture<TestFixture>
     }
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanRunInTransactionAsync(string moniker)
     {
         // arrange
@@ -96,9 +97,7 @@ public class CommonTests : IClassFixture<TestFixture>
     // TODO: tests for querymultiple
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanQueryAsync(string moniker)
     {
         // arrange
@@ -120,9 +119,7 @@ public class CommonTests : IClassFixture<TestFixture>
     }
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanQuerySingleAsync(string moniker)
     {
         // arrange
@@ -145,9 +142,7 @@ public class CommonTests : IClassFixture<TestFixture>
     }
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanQuerySingleOrDefaultAsync(string moniker)
     {
         // arrange
@@ -171,9 +166,7 @@ public class CommonTests : IClassFixture<TestFixture>
     }
 
     [Theory]
-    [InlineData(Monikers.MySql)]
-    [InlineData(Monikers.Postgres)]
-    [InlineData(Monikers.SqlServer)]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanExecuteScalarAsync(string moniker)
     {
         // arrange
