@@ -21,7 +21,7 @@ public class SampleDataAccess
             value = value,
             as_of_date_utc = asOfDateUtc,
         };
-        var rowsAffected = await ExecuteAsync(sql, args, transaction, cancellationToken: cancellationToken);
+        var rowsAffected = await ExecuteAsync(sql, args, transaction, cancellationToken);
         return rowsAffected;
     }
 
@@ -29,7 +29,7 @@ public class SampleDataAccess
     {
         var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
         var args = new { sample_id = sampleId };
-        var result = await QueryAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        var result = await QueryAsync<SampleRow>(sql, args, transaction, cancellationToken);
         return result;
     }
 
@@ -45,7 +45,7 @@ public class SampleDataAccess
     {
         var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
         var args = new { sample_id = sampleId };
-        var result = await QuerySingleAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        var result = await QuerySingleAsync<SampleRow>(sql, args, transaction, cancellationToken);
         return result;
     }
 
@@ -53,7 +53,7 @@ public class SampleDataAccess
     {
         var sql = "SELECT * FROM samples WHERE sample_id = @sample_id";
         var args = new { sample_id = sampleId };
-        var result = await QuerySingleOrDefaultAsync<SampleRow>(sql, args, transaction, cancellationToken: cancellationToken);
+        var result = await QuerySingleOrDefaultAsync<SampleRow>(sql, args, transaction, cancellationToken);
         return result;
     }
 
@@ -61,7 +61,7 @@ public class SampleDataAccess
     {
         var sql = "SELECT as_of_date_utc FROM samples WHERE sample_id = @sample_id";
         var args = new { sample_id = sampleId };
-        var result = await ExecuteScalarAsync<DateTime?>(sql, args, transaction, cancellationToken: cancellationToken);
+        var result = await ExecuteScalarAsync<DateTime?>(sql, args, transaction, cancellationToken);
         return result;
     }
 }

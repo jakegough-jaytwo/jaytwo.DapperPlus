@@ -8,8 +8,8 @@ public interface IDapperWrapperDataAccess<TConnection, TTransaction>
     where TConnection : DbConnection
     where TTransaction : DbTransaction
 {
-    Task RunInTransactionAsync(Func<TTransaction, Task> callback, CancellationToken cancellationToken = default)
-        => RunInTransactionAsync(callback, isolationLevel: default, cancellationToken: cancellationToken);
+    async Task RunInTransactionAsync(Func<TTransaction, Task> callback, CancellationToken cancellationToken = default)
+        => await RunInTransactionAsync(callback, isolationLevel: default, cancellationToken: cancellationToken);
 
     Task RunInTransactionAsync(Func<TTransaction, Task> callback, IsolationLevel? isolationLevel, CancellationToken cancellationToken = default);
 }

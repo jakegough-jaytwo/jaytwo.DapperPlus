@@ -11,6 +11,7 @@ public abstract class DapperWrapperDataAccess
 {
     static DapperWrapperDataAccess()
     {
+        // TODO: it doesn't seem right to set this (globally) here...
         DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
@@ -21,8 +22,8 @@ public abstract class DapperWrapperDataAccess
 
     private IDapperWrapper Dapper { get; }
 
-    public virtual async Task<object> HealthCheckAsync()
-        => await Dapper.HealthCheckAsync();
+    public virtual async Task<object> HealthCheckAsync(CancellationToken cancellationToken = default)
+        => await Dapper.HealthCheckAsync(cancellationToken);
 
     public virtual async Task RunInTransactionAsync(Func<DbTransaction, Task> callback, IsolationLevel? isolationLevel = default, CancellationToken cancellationToken = default)
         => await Dapper.RunInTransactionAsync(callback, isolationLevel, cancellationToken);
@@ -36,7 +37,7 @@ public abstract class DapperWrapperDataAccess
     protected virtual async Task RollbackTransactionAsync(DbTransaction transaction, CancellationToken cancellationToken = default)
         => await Dapper.RollbackTransactionAsync(transaction, cancellationToken);
 
-    protected async Task<int> ExecuteAsync(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<int> ExecuteAsync(string commandText, CancellationToken cancellationToken)
         => await ExecuteAsync(
             commandText: commandText,
             parameters: default,
@@ -49,7 +50,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<int> ExecuteAsync(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await ExecuteAsync(
             commandText: commandText,
             parameters: parameters,
@@ -62,7 +63,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<int> ExecuteAsync(
         string commandText,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await ExecuteAsync(
             commandText: commandText,
             parameters: default,
@@ -76,7 +77,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await ExecuteAsync(
             commandText: commandText,
             parameters: parameters,
@@ -103,7 +104,7 @@ public abstract class DapperWrapperDataAccess
             cancellationTimeoutSeconds: cancellationTimeoutSeconds,
             cancellationToken: cancellationToken);
 
-    protected async Task<T?> ExecuteScalarAsync<T>(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<T?> ExecuteScalarAsync<T>(string commandText, CancellationToken cancellationToken)
         => await ExecuteScalarAsync<T>(
             commandText: commandText,
             parameters: default,
@@ -129,7 +130,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<T?> ExecuteScalarAsync<T>(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await ExecuteScalarAsync<T>(
             commandText: commandText,
             parameters: parameters,
@@ -143,7 +144,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await ExecuteScalarAsync<T>(
             commandText: commandText,
             parameters: parameters,

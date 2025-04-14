@@ -5,10 +5,10 @@ namespace jaytwo.DapperWrapper;
 
 public interface IDapperWrapperDataAccess
 {
-    Task<object> HealthCheckAsync();
+    Task<object> HealthCheckAsync(CancellationToken cancellationToken = default);
 
-    Task RunInTransactionAsync(Func<DbTransaction, Task> callback, CancellationToken cancellationToken = default)
-        => RunInTransactionAsync(callback, isolationLevel: default, cancellationToken: cancellationToken);
+    async Task RunInTransactionAsync(Func<DbTransaction, Task> callback, CancellationToken cancellationToken = default)
+        => await RunInTransactionAsync(callback, isolationLevel: default, cancellationToken: cancellationToken);
 
     Task RunInTransactionAsync(Func<DbTransaction, Task> callback, IsolationLevel? isolationLevel, CancellationToken cancellationToken = default);
 }
