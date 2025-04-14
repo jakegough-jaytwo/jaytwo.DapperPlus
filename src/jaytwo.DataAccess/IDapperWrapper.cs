@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using static Dapper.SqlMapper;
 
 namespace jaytwo.DataAccess;
 
@@ -17,60 +18,69 @@ public interface IDapperWrapper
 
     Task<int> ExecuteAsync(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default);
 
     Task<T?> ExecuteScalarAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default);
 
     Task<IList<T>> QueryAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default);
 
     Task<T?> QuerySingleOrDefaultAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default);
 
     Task<T> QuerySingleAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
+        CancellationToken cancellationToken = default);
+
+    Task<GridReader> QueryMultipleAsync(
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default);
 
 #if NET5_0_OR_GREATER
     IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        int? cancellationTimeoutSeconds = null,
-        CommandType? commandType = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        int? cancellationTimeoutSeconds = default,
+        CommandType? commandType = default,
         T? prototype = default);
 #endif
 }

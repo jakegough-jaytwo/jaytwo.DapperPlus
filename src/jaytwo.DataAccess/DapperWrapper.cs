@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using Dapper;
 using OpenTracing;
+using static Dapper.SqlMapper;
 
 namespace jaytwo.DataAccess;
 
@@ -95,11 +96,11 @@ public class DapperWrapper
 
     public virtual async Task<int> ExecuteAsync(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default)
         => await RunWithCancellationTokenAsync(
              queryDelegate: (conn, comm) => conn.ExecuteAsync(comm),
@@ -114,11 +115,11 @@ public class DapperWrapper
 
     public async Task<T?> ExecuteScalarAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default)
         => await RunWithCancellationTokenAsync<T?>(
             queryDelegate: (conn, comm) => conn.ExecuteScalarAsync<T?>(comm),
@@ -133,11 +134,11 @@ public class DapperWrapper
 
     public async Task<IList<T>> QueryAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default)
         => await RunWithCancellationTokenAsync<IList<T>>(
@@ -151,13 +152,32 @@ public class DapperWrapper
             cancellationTimeoutSeconds: cancellationTimeoutSeconds,
             cancellationToken: cancellationToken);
 
+    public async Task<GridReader> QueryMultipleAsync(
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        CancellationToken cancellationToken = default)
+        => await RunWithCancellationTokenAsync<GridReader>(
+            queryDelegate: async (conn, comm) => (await conn.QueryMultipleAsync(comm)),
+            commandText: commandText,
+            parameters: parameters,
+            transaction: transaction,
+            commandTimeoutSeconds: commandTimeoutSeconds,
+            commandType: commandType,
+            flags: CommandFlags.Buffered,
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
+            cancellationToken: cancellationToken);
+
     public async Task<T?> QuerySingleOrDefaultAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default)
         => await RunWithCancellationTokenAsync<T?>(
@@ -173,11 +193,11 @@ public class DapperWrapper
 
     public async Task<T> QuerySingleAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        CommandType? commandType = null,
-        int? cancellationTimeoutSeconds = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default)
         => await RunWithCancellationTokenAsync<T>(
@@ -194,11 +214,11 @@ public class DapperWrapper
 #if NET5_0_OR_GREATER
     public virtual IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
         string commandText,
-        object? parameters = null,
-        DbTransaction? transaction = null,
-        int? commandTimeoutSeconds = null,
-        int? cancellationTimeoutSeconds = null,
-        CommandType? commandType = null,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        int? cancellationTimeoutSeconds = default,
+        CommandType? commandType = default,
         T? prototype = default)
     {
         // cancellationToken is not needed in the signature for this method because when WithCancellation()
@@ -239,11 +259,8 @@ public class DapperWrapper
             string tracerScopeNamePrefix,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            using (tracer?.BuildSpan(tracerScopeNamePrefix + "." + "ConnectionOpen").StartActive())
-            {
-                // just making sure opening the connection doesn't throw off the telemetry for the first row time
-                await connection.OpenAsync(cancellationToken);
-            }
+            // just making sure opening the connection doesn't throw off the telemetry for the first row time
+            await OpenConnectionIfClosedAsync(connection, tracer, tracerScopeNamePrefix, cancellationToken);
 
             var firstRowTracerScope = tracer?.BuildSpan(tracerScopeNamePrefix + "." + "FirstRow").StartActive();
 
@@ -284,14 +301,25 @@ public class DapperWrapper
     }
 #endif
 
+    protected static async Task OpenConnectionIfClosedAsync(DbConnection connection, ITracer? tracer = default, string? tracerScopeNamePrefix = default, CancellationToken cancellationToken = default)
+    {
+        if (connection.State == ConnectionState.Closed)
+        {
+            using (tracer?.BuildSpan(tracerScopeNamePrefix + "OpenConnection").StartActive())
+            {
+                await connection.OpenAsync(cancellationToken);
+            }
+        }
+    }
+
+    protected virtual async Task OpenConnectionIfClosedAsync(DbConnection connection, CancellationToken cancellationToken)
+        => await OpenConnectionIfClosedAsync(connection, Tracer, GetType().Name + ".", cancellationToken);
+
     protected virtual async Task<DbTransaction> OpenTransactionAsync(DbConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
     {
         using (Tracer?.BuildSpan(GetType().Name + ".BeginTransaction").StartActive())
         {
-            using (Tracer?.BuildSpan(GetType().Name + ".OpenConnection").StartActive())
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
+            await OpenConnectionIfClosedAsync(connection, cancellationToken);
 
             return await connection.BeginTransactionAsync(isolationLevel ?? TransactionIsolationLevel, cancellationToken);
         }

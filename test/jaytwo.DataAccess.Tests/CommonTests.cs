@@ -60,6 +60,33 @@ public class CommonTests : IClassFixture<TestFixture>
     [Theory]
     [InlineData(Monikers.MySql)]
     [InlineData(Monikers.Postgres)]
+    public async Task CanRunInTransactionAsync(string moniker)
+    {
+        // arrange
+        var key = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+
+        await dataAccess.RunInTransactionAsync(async transaction =>
+        {
+            var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow, transaction);
+
+            // act
+            var rowsInsideTransaction = await dataAccess.SelectSampleAsync(key, transaction);
+            var rowsOutsideTransaction = await dataAccess.SelectSampleOrDefaultAsync(key);
+
+            // assert
+            Assert.Equal(key, rowsInsideTransaction.SampleId);
+            Assert.Equal(value, rowsInsideTransaction.Value!.Value, precision: 4);
+            Assert.Equal(utcNow, rowsInsideTransaction.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+            Assert.Null(rowsOutsideTransaction);
+        });
+    }
+    [Theory]
+    [InlineData(Monikers.MySql)]
+    [InlineData(Monikers.Postgres)]
     public async Task CanQueryAsync(string moniker)
     {
         // arrange
