@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using jaytwo.DapperWrapper.Tests.Data;
 using Moq;
 using Xunit;
 
@@ -13,7 +14,7 @@ public class QueryUnbufferedTests
     {
         // arrange
         var commandText = Guid.NewGuid().ToString();
-        var transaction = It.IsNotNull<DbTransaction>();
+        var transaction = new Mock<DbTransaction>().Object;
         var expectedResult = AsyncEnumerable.Empty<MyRecord>();
 
         Expression<Func<IDapperWrapper, IAsyncEnumerable<MyRecord>>> testExpression =
@@ -40,7 +41,7 @@ public class QueryUnbufferedTests
         // arrange
         var commandText = Guid.NewGuid().ToString();
         var parameters = new { Id = 1 };
-        var transaction = It.IsNotNull<DbTransaction>();
+        var transaction = new Mock<DbTransaction>().Object;
         var commandTimeoutSeconds = 10;
         var commandType = CommandType.Text;
         var cancellationTimeoutSeconds = 11;

@@ -1,8 +1,9 @@
 using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
+using static Dapper.SqlMapper;
 
-namespace jaytwo.DapperWrapper.Tests.DataAccessTests;
+namespace jaytwo.DapperWrapper.Tests.Data;
 
 public class MyDataAccess : DapperWrapperDataAccess
 {
@@ -135,7 +136,7 @@ public class MyDataAccess : DapperWrapperDataAccess
         int? cancellationTimeoutSeconds,
         T? prototype,
         CancellationToken cancellationToken)
-        => await QuerySingleOrDefaultAsync<T>(
+        => await QuerySingleOrDefaultAsync(
             command,
             parameters,
             transaction,
@@ -178,7 +179,7 @@ public class MyDataAccess : DapperWrapperDataAccess
         int? cancellationTimeoutSeconds,
         T? prototype,
         CancellationToken cancellationToken)
-        => await QuerySingleAsync<T>(
+        => await QuerySingleAsync(
             command,
             parameters,
             transaction,
@@ -221,7 +222,7 @@ public class MyDataAccess : DapperWrapperDataAccess
         int? cancellationTimeoutSeconds,
         T? prototype,
         CancellationToken cancellationToken)
-        => await QueryAsync<T>(
+        => await QueryAsync(
             command,
             parameters,
             transaction,
@@ -229,6 +230,47 @@ public class MyDataAccess : DapperWrapperDataAccess
             commandType,
             cancellationTimeoutSeconds,
             prototype,
+            cancellationToken);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command)
+        => await QueryMultipleAsync(command);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, object parameters)
+        => await QueryMultipleAsync(command, parameters);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, DbTransaction transaction)
+        => await QueryMultipleAsync(command, transaction);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, object parameters, DbTransaction transaction)
+        => await QueryMultipleAsync(command, parameters, transaction);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, cancellationToken);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, object parameters, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, parameters, cancellationToken);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, DbTransaction transaction, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, transaction, cancellationToken);
+
+    public async Task<GridReader> RunQueryMultipleAsync(string command, object parameters, DbTransaction transaction, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, parameters, transaction, cancellationToken);
+
+    public async Task<GridReader> RunQueryMultipleAsync(
+        string command,
+        object? parameters,
+        DbTransaction? transaction,
+        int? commandTimeoutSeconds,
+        CommandType? commandType,
+        int? cancellationTimeoutSeconds,
+        CancellationToken cancellationToken)
+        => await QueryMultipleAsync(
+            command,
+            parameters,
+            transaction,
+            commandTimeoutSeconds,
+            commandType,
+            cancellationTimeoutSeconds,
             cancellationToken);
 
     public IAsyncEnumerable<T> RunQueryUnbufferedAsync<T>(string command, DbTransaction transaction)
@@ -242,7 +284,7 @@ public class MyDataAccess : DapperWrapperDataAccess
         CommandType? commandType,
         int? cancellationTimeoutSeconds,
         T? prototype)
-        => QueryUnbufferedAsync<T>(
+        => QueryUnbufferedAsync(
             command,
             parameters,
             transaction,

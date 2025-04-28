@@ -1,4 +1,4 @@
-namespace jaytwo.DapperWrapper.Tests.DataAccessTests;
+namespace jaytwo.DapperWrapper.Tests.Data;
 
 public class MyRecord
 {

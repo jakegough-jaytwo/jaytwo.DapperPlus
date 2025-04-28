@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using jaytwo.DapperWrapper.Tests.Data;
 using Moq;
 using Xunit;
 

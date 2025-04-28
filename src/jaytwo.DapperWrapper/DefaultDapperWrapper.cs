@@ -1,6 +1,5 @@
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Dapper;
 using OpenTracing;
@@ -15,7 +14,6 @@ public class DefaultDapperWrapper
     public const int DefaultCommandTimeoutSeconds = 30;
     public const int DefaultCancellationTimeoutSeconds = 45;
 
-    private readonly InternalDapper _dapper;
     private readonly Func<DbConnection> _connectionFactory;
 
     public DefaultDapperWrapper(
@@ -24,29 +22,24 @@ public class DefaultDapperWrapper
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
         int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
         ITracer? tracer = default)
-        : this(
-              connectionFactory,
-              new InternalDapper(
-                transactionIsolationLevel ?? DefaultTransactionIsolationLevel,
-                commandTimeoutSeconds ?? DefaultCommandTimeoutSeconds,
-                cancellationTimeoutSeconds ?? DefaultCancellationTimeoutSeconds,
-                tracer),
-              tracer)
-    {
-    }
-
-    internal DefaultDapperWrapper(Func<DbConnection> connectionFactory, InternalDapper dapper, ITracer? tracer)
     {
         _connectionFactory = connectionFactory;
-        _dapper = dapper;
+        TransactionIsolationLevel = transactionIsolationLevel ?? DefaultTransactionIsolationLevel;
+        CommandTimeoutSeconds = commandTimeoutSeconds ?? DefaultCommandTimeoutSeconds;
+        CancellationTimeoutSeconds = cancellationTimeoutSeconds ?? DefaultCancellationTimeoutSeconds;
         Tracer = tracer;
     }
 
-    public IsolationLevel TransactionIsolationLevel => _dapper.TransactionIsolationLevel;
+    internal DefaultDapperWrapper(Func<DbConnection> connectionFactory)
+        : this(connectionFactory, default, default, default, default)
+    {
+    }
 
-    public int CancellationTimeoutSeconds => _dapper.CancellationTimeoutSeconds;
+    public IsolationLevel TransactionIsolationLevel { get; }
 
-    public int CommandTimeoutSeconds => _dapper.CommandTimeoutSeconds;
+    public int CancellationTimeoutSeconds { get; }
+
+    public int CommandTimeoutSeconds { get; }
 
     protected ITracer? Tracer { get; }
 
@@ -114,19 +107,17 @@ public class DefaultDapperWrapper
         CommandType? commandType = default,
         int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: (conn, comm) => conn.ExecuteAsync(comm),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
+        => await ExecuteAsync(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            cancellationToken);
 
-    public async Task<T?> ExecuteScalarAsync<T>(
+    public virtual async Task<T?> ExecuteScalarAsync<T>(
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -134,60 +125,17 @@ public class DefaultDapperWrapper
         CommandType? commandType = default,
         int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync<T?>(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: (conn, comm) => conn.ExecuteScalarAsync<T?>(comm),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
+        => await ExecuteScalarAsync<T>(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            cancellationToken);
 
-    public async Task<IList<T>> QueryAsync<T>(
-        string commandText,
-        object? parameters = default,
-        DbTransaction? transaction = default,
-        int? commandTimeoutSeconds = default,
-        CommandType? commandType = default,
-        int? cancellationTimeoutSeconds = default,
-        T? prototype = default,
-        CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync<IList<T>>(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: async (conn, comm) => (await conn.QueryAsync<T>(comm)).ToList(),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
-
-    public async Task<GridReader> QueryMultipleAsync(
-        string commandText,
-        object? parameters = default,
-        DbTransaction? transaction = default,
-        int? commandTimeoutSeconds = default,
-        CommandType? commandType = default,
-        int? cancellationTimeoutSeconds = default,
-        CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync<GridReader>(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: async (conn, comm) => (await conn.QueryMultipleAsync(comm)),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
-
-    public async Task<T?> QuerySingleOrDefaultAsync<T>(
+    public virtual async Task<IList<T>> QueryAsync<T>(
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -196,19 +144,17 @@ public class DefaultDapperWrapper
         int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync<T?>(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: (conn, comm) => conn.QuerySingleOrDefaultAsync<T>(comm),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
+        => await QueryAsync<T>(
+                BuildDapperCommandContext(
+                    commandText: commandText,
+                    parameters: parameters,
+                    transaction: transaction,
+                    commandTimeoutSeconds: commandTimeoutSeconds,
+                    commandType: commandType,
+                    cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+                cancellationToken);
 
-    public async Task<T> QuerySingleAsync<T>(
+    public virtual async Task<T?> QuerySingleOrDefaultAsync<T>(
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -217,17 +163,52 @@ public class DefaultDapperWrapper
         int? cancellationTimeoutSeconds = default,
         T? prototype = default,
         CancellationToken cancellationToken = default)
-        => await _dapper.RunWithCancellationTokenAsync<T>(
-            connectionFactory: () => CreateConnection(),
-            queryDelegate: (conn, comm) => conn.QuerySingleAsync<T>(comm),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            flags: CommandFlags.Buffered,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            cancellationToken: cancellationToken);
+        => await QuerySingleOrDefaultAsync<T>(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            cancellationToken);
+
+    public virtual async Task<T> QuerySingleAsync<T>(
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        T? prototype = default,
+        CancellationToken cancellationToken = default)
+        => await QuerySingleAsync<T>(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            cancellationToken);
+
+    public virtual async Task<GridReader> QueryMultipleAsync(
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        CancellationToken cancellationToken = default)
+        => await QueryMultipleAsync(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            cancellationToken);
 
 #if NET5_0_OR_GREATER
     public virtual IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
@@ -238,18 +219,165 @@ public class DefaultDapperWrapper
         CommandType? commandType = default,
         int? cancellationTimeoutSeconds = default,
         T? prototype = default)
-        => _dapper.QueryUnbufferedAsync<T>(
-            connectionFactory: () => CreateConnection(),
-            commandText: commandText,
-            parameters: parameters,
-            transaction: transaction,
-            commandTimeoutSeconds: commandTimeoutSeconds,
-            commandType: commandType,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds);
+        => QueryUnbufferedAsync<T>(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds));
 #endif
 
-    protected virtual async Task OpenConnectionIfClosedAsync(DbConnection connection, CancellationToken cancellationToken)
-        => await InternalDapper.OpenConnectionIfClosedAsync(connection, Tracer, GetType().Name + ".", cancellationToken);
+    internal static async Task OpenConnectionIfClosedAsync(DbConnection connection, ITracer? tracer = default, string? tracerScopeNamePrefix = default, CancellationToken cancellationToken = default)
+    {
+        if (connection.State == ConnectionState.Closed)
+        {
+            using (tracer?.BuildSpan(tracerScopeNamePrefix + ".OpenConnection").StartActive())
+            {
+                await connection.OpenAsync(cancellationToken);
+            }
+        }
+    }
+
+    internal virtual async Task<int> ExecuteAsync(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.ExecuteAsync(comm),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<T?> ExecuteScalarAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.ExecuteScalarAsync<T>(comm),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<IList<T>> QueryAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => (await conn.QueryAsync<T>(comm)).ToList(),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<T?> QuerySingleOrDefaultAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.QuerySingleOrDefaultAsync<T>(comm),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<T> QuerySingleAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.QuerySingleAsync<T>(comm),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<GridReader> QueryMultipleAsync(DapperCommandContext context, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.QueryMultipleAsync(comm),
+            context,
+            CommandFlags.Buffered,
+            cancellationToken);
+
+    internal virtual async Task<T> RunWithCancellationTokenAsync<T>(
+        Func<DbConnection, CommandDefinition, Task<T>> queryDelegate,
+        DapperCommandContext context,
+        CommandFlags commandFlags,
+        CancellationToken cancellationToken)
+    {
+        var tracerScopeName = GetType().Name + "." + nameof(RunWithCancellationTokenAsync);
+        using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
+
+        // just making sure opening the connection so we have the telemetry if the operation includes opening the connection
+        var connection = context.Transaction?.Connection ?? _connectionFactory();
+        await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
+
+        using (var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(context.CancellationTimeoutSeconds)))
+        using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token))
+        {
+            // we build up our own command definition solely to add a cancellationToken
+            var commandDefinition = context.ToDapperCommandDefinition(commandFlags, linkedTokenSource.Token);
+
+            try
+            {
+                return await queryDelegate.Invoke(connection, commandDefinition);
+            }
+            catch (Exception ex)
+            {
+                var message = ex.Message;
+                throw;
+            }
+            finally
+            {
+                if (context.Transaction == null)
+                {
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+    }
+
+#if NET5_0_OR_GREATER
+    internal virtual IAsyncEnumerable<T> QueryUnbufferedAsync<T>(DapperCommandContext context)
+        => QueryUnbufferedAsync<T>(
+            queryDelegate: conn => conn.QueryUnbufferedAsync<T>(
+                context.CommandText,
+                context.Parameters,
+                context.Transaction,
+                context.CommandTimeoutSeconds,
+                context.CommandType),
+            context: context);
+
+    internal virtual async IAsyncEnumerable<T> QueryUnbufferedAsync<T>(
+        Func<DbConnection, IAsyncEnumerable<T>> queryDelegate,
+        DapperCommandContext context,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var tracerScopeName = GetType().Name + "." + nameof(QueryUnbufferedAsync);
+        using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
+
+        // just making sure opening the connection doesn't throw off the telemetry for the first row time
+        var connection = context.Transaction?.Connection ?? _connectionFactory();
+        await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
+
+        using var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(context.CancellationTimeoutSeconds));
+        using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token);
+        var firstRowTracerScope = Tracer?.BuildSpan(tracerScopeName + ".FirstRow").StartActive();
+        try
+        {
+            var rows = queryDelegate(connection).WithCancellation(linkedTokenSource.Token);
+
+            var enumerator = rows.GetAsyncEnumerator();
+
+            if (await enumerator.MoveNextAsync())
+            {
+                firstRowTracerScope?.Dispose();
+
+                yield return enumerator.Current;
+
+                while (await enumerator.MoveNextAsync())
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+        finally
+        {
+            firstRowTracerScope?.Dispose();
+
+            if (context.Transaction == null)
+            {
+                await connection.DisposeAsync();
+            }
+        }
+    }
+#endif
+
+    protected internal virtual async Task OpenConnectionIfClosedAsync(DbConnection connection, CancellationToken cancellationToken)
+        => await OpenConnectionIfClosedAsync(connection, Tracer, GetType().Name, cancellationToken);
 
     protected virtual async Task<DbTransaction> OpenTransactionAsync(DbConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
     {
@@ -260,4 +388,21 @@ public class DefaultDapperWrapper
             return await connection.BeginTransactionAsync(isolationLevel ?? TransactionIsolationLevel, cancellationToken);
         }
     }
+
+    private DapperCommandContext BuildDapperCommandContext(
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default)
+        => new DapperCommandContext()
+        {
+            CommandText = commandText,
+            Parameters = parameters,
+            Transaction = transaction,
+            CommandTimeoutSeconds = commandTimeoutSeconds ?? CommandTimeoutSeconds,
+            CommandType = commandType ?? CommandType.Text,
+            CancellationTimeoutSeconds = cancellationTimeoutSeconds ?? CancellationTimeoutSeconds,
+        };
 }

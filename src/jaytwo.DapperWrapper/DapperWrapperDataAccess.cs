@@ -390,7 +390,7 @@ public abstract class DapperWrapperDataAccess
             prototype: prototype,
             cancellationToken: cancellationToken);
 
-    protected async Task<GridReader> QueryMultipleAsync(string commandText, CancellationToken cancellationToken = default)
+    protected async Task<GridReader> QueryMultipleAsync(string commandText, CancellationToken cancellationToken)
         => await QueryMultipleAsync(
             commandText: commandText,
             parameters: default,
@@ -416,7 +416,7 @@ public abstract class DapperWrapperDataAccess
     protected async Task<GridReader> QueryMultipleAsync(
         string commandText,
         object? parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QueryMultipleAsync(
             commandText: commandText,
             parameters: parameters,
@@ -430,7 +430,7 @@ public abstract class DapperWrapperDataAccess
         string commandText,
         object? parameters,
         DbTransaction? transaction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await QueryMultipleAsync(
             commandText: commandText,
             parameters: parameters,
