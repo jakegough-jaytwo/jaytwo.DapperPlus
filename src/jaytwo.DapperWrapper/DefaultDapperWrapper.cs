@@ -44,31 +44,7 @@ public class DefaultDapperWrapper
     protected ITracer? Tracer { get; }
 
     public virtual async Task<object> HealthCheckAsync(CancellationToken cancellationToken = default)
-    {
-        // TODO: make this easier to override
-
-        using var connection = CreateConnection();
-        if (connection.ConnectionString.StartsWith("TODO"))
-        {
-            return "Disabled";
-        }
-
-        var result = new Dictionary<string, object>();
-
-        try
-        {
-            var nowTime = await ExecuteScalarAsync<DateTime>("SELECT now()");
-            result["serverTime"] = nowTime.ToString("O");
-        }
-        catch (Exception ex)
-        {
-            var healthCheckException = new Exception(ex.Message, ex);
-            healthCheckException.Data.Add(nameof(result), result);
-            throw healthCheckException;
-        }
-
-        return result;
-    }
+        => await new DatabaseHealthCheck<DefaultDapperWrapper>(this).HealthCheckAsync(cancellationToken);
 
     public virtual DbConnection CreateConnection()
         => _connectionFactory.Invoke();

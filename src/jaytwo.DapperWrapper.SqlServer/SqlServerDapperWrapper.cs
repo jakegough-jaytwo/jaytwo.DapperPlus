@@ -38,35 +38,5 @@ public class SqlServerDapperWrapper
     }
 
     public override async Task<object> HealthCheckAsync(CancellationToken cancellationToken = default)
-    {
-        using var connection = CreateConnection();
-
-        if (connection.ConnectionString.StartsWith("TODO"))
-        {
-            return "Disabled";
-        }
-
-        var connectionStringBuilder = new SqlConnectionStringBuilder(connection.ConnectionString);
-
-        var result = new Dictionary<string, object>()
-        {
-            { "DataSource", connectionStringBuilder.DataSource! },
-            { "InitialCatalog", connectionStringBuilder.InitialCatalog! },
-            { "UserID", connectionStringBuilder.UserID! },
-        };
-
-        try
-        {
-            var nowTime = await ExecuteScalarAsync<DateTime>("SELECT getdate()");
-            result["serverTime"] = nowTime.ToString("O");
-        }
-        catch (Exception ex)
-        {
-            var healthCheckException = new Exception(ex.Message, ex);
-            healthCheckException.Data.Add(nameof(result), result);
-            throw healthCheckException;
-        }
-
-        return result;
-    }
+        => await new SqlServerDatabaseHealthCheck(this).HealthCheckAsync(cancellationToken);
 }
