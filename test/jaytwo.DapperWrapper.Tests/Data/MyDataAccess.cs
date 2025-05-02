@@ -232,32 +232,31 @@ public class MyDataAccess : DapperWrapperDataAccess
             prototype,
             cancellationToken);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command)
-        => await QueryMultipleAsync(connection, command);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command)
+        => await QueryMultipleAsync(command);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, object parameters)
-        => await QueryMultipleAsync(connection, command, parameters);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, object parameters)
+        => await QueryMultipleAsync(command, parameters);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, DbTransaction transaction)
-        => await QueryMultipleAsync(connection, command, transaction);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, DbTransaction transaction)
+        => await QueryMultipleAsync(command, transaction);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, object parameters, DbTransaction transaction)
-        => await QueryMultipleAsync(connection, command, parameters, transaction);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, object parameters, DbTransaction transaction)
+        => await QueryMultipleAsync(command, parameters, transaction);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, CancellationToken cancellationToken)
-        => await QueryMultipleAsync(connection, command, cancellationToken);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, cancellationToken);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, object parameters, CancellationToken cancellationToken)
-        => await QueryMultipleAsync(connection, command, parameters, cancellationToken);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, object parameters, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, parameters, cancellationToken);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, DbTransaction transaction, CancellationToken cancellationToken)
-        => await QueryMultipleAsync(connection, command, transaction, cancellationToken);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, DbTransaction transaction, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, transaction, cancellationToken);
 
-    public async Task<GridReader> RunQueryMultipleAsync(DbConnection connection, string command, object parameters, DbTransaction transaction, CancellationToken cancellationToken)
-        => await QueryMultipleAsync(connection, command, parameters, transaction, cancellationToken);
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(string command, object parameters, DbTransaction transaction, CancellationToken cancellationToken)
+        => await QueryMultipleAsync(command, parameters, transaction, cancellationToken);
 
-    public async Task<GridReader> RunQueryMultipleAsync(
-        DbConnection connection,
+    public async Task<IGridReaderWrapper> RunQueryMultipleAsync(
         string command,
         object? parameters,
         DbTransaction? transaction,
@@ -266,7 +265,6 @@ public class MyDataAccess : DapperWrapperDataAccess
         int? cancellationTimeoutSeconds,
         CancellationToken cancellationToken)
         => await QueryMultipleAsync(
-            connection,
             command,
             parameters,
             transaction,
@@ -275,32 +273,31 @@ public class MyDataAccess : DapperWrapperDataAccess
             cancellationTimeoutSeconds,
             cancellationToken);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command)
-        => await ExecuteReaderAsync(connection, command);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command)
+        => await ExecuteReaderAsync(command);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, object parameters)
-        => await ExecuteReaderAsync(connection, command, parameters);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, object parameters)
+        => await ExecuteReaderAsync(command, parameters);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, DbTransaction transaction)
-        => await ExecuteReaderAsync(connection, command, transaction);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, DbTransaction transaction)
+        => await ExecuteReaderAsync(command, transaction);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, object parameters, DbTransaction transaction)
-        => await ExecuteReaderAsync(connection, command, parameters, transaction);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, object parameters, DbTransaction transaction)
+        => await ExecuteReaderAsync(command, parameters, transaction);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, CancellationToken cancellationToken)
-        => await ExecuteReaderAsync(connection, command, cancellationToken);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(command, cancellationToken);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, object parameters, CancellationToken cancellationToken)
-        => await ExecuteReaderAsync(connection, command, parameters, cancellationToken);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, object parameters, CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(command, parameters, cancellationToken);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, DbTransaction transaction, CancellationToken cancellationToken)
-        => await ExecuteReaderAsync(connection, command, transaction, cancellationToken);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, DbTransaction transaction, CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(command, transaction, cancellationToken);
 
-    public async Task<IDataReader> RunExecuteReaderAsync(DbConnection connection, string command, object parameters, DbTransaction transaction, CancellationToken cancellationToken)
-        => await ExecuteReaderAsync(connection, command, parameters, transaction, cancellationToken);
+    public async Task<IDataReader> RunExecuteReaderAsync(string command, object parameters, DbTransaction transaction, CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(command, parameters, transaction, cancellationToken);
 
     public async Task<IDataReader> RunExecuteReaderAsync(
-        DbConnection connection,
         string command,
         object? parameters,
         DbTransaction? transaction,
@@ -310,7 +307,6 @@ public class MyDataAccess : DapperWrapperDataAccess
         CommandBehavior? commandBehavior,
         CancellationToken cancellationToken)
         => await ExecuteReaderAsync(
-            connection,
             command,
             parameters,
             transaction,

@@ -287,9 +287,9 @@ public class DapperWrapperTests
         var parameters = new { Id = 1 };
         var commandTimeoutSeconds = 3;
         var cancellationTimeoutSeconds = 5;
-        var expectedResult = default(GridReader)!;
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<DefaultDapperWrapper, Task<GridReader>>> testExpression =
+        Expression<Func<DefaultDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
             x => x.QueryMultipleAsync(
                 It.Is<DapperCommandContext>(x =>
                     x.CommandText == commandText
@@ -307,7 +307,6 @@ public class DapperWrapperTests
 
         // Act
         var actualResult = await dapperWrapper.Object.QueryMultipleAsync(
-            connection,
             commandText,
             parameters,
             transaction,

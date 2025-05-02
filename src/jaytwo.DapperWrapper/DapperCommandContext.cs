@@ -10,6 +10,8 @@ namespace jaytwo.DapperWrapper;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 internal class DapperCommandContext
 {
+    public bool HasConnection => GetContextConnection() != null;
+
     public string CommandText { get; set; }
 
     public object? Parameters { get; set; }
@@ -23,6 +25,8 @@ internal class DapperCommandContext
     public CommandType CommandType { get; set; }
 
     public int CancellationTimeoutSeconds { get; set; }
+
+    public DbConnection? GetContextConnection() => Connection ?? Transaction?.Connection;
 
     public CommandDefinition ToDapperCommandDefinition(CommandFlags flags, CancellationToken cancellationToken)
         => new CommandDefinition(

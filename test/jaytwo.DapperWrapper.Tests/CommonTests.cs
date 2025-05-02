@@ -74,6 +74,34 @@ public class CommonTests : IClassFixture<TestFixture>
 
     [Theory]
     [MemberData(nameof(GetMonikerTestCases))]
+    public async Task CanQueryUnbufferedAsync_in_transaction(string moniker)
+    {
+        // arrange
+        var key = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        await dataAccess.RunInTransactionAsync(
+            async transaction =>
+            {
+                var rowsAffected = await dataAccess.InsertSampleAsync(key, value, utcNow, transaction);
+
+                // act
+                var rows = await dataAccess.SelectSamplesUnbufferedAsync(key, transaction);
+
+                // assert
+                var row = Assert.Single(rows)!;
+                Assert.Equal(key, row.SampleId);
+                Assert.Equal(value, row.Value!.Value, precision: 4);
+                Assert.Equal(utcNow, row.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+
+                await transaction.CommitAsync(); // just making sure nothing closed the connection
+            });
+    }
+
+    [Theory]
+    [MemberData(nameof(GetMonikerTestCases))]
     public async Task CanRunInTransactionAsync(string moniker)
     {
         // arrange
@@ -160,6 +188,8 @@ public class CommonTests : IClassFixture<TestFixture>
             Assert.Equal(key2, row2.SampleId);
             Assert.Equal(value, row2.Value!.Value, precision: 4);
             Assert.Equal(utcNow, row2.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+
+            await transaction.CommitAsync(); // just making sure nothing closed the connection
         });
     }
 

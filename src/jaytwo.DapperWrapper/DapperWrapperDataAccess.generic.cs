@@ -11,10 +11,10 @@ public abstract class DapperWrapperDataAccess<TConnection, TTransaction>
     public DapperWrapperDataAccess(IDapperWrapper<TConnection, TTransaction> dapper)
         : base(dapper)
     {
-        Dapper = dapper;
     }
 
-    private IDapperWrapper<TConnection, TTransaction> Dapper { get; }
+    protected new IDapperWrapper<TConnection, TTransaction> Dapper
+        => (IDapperWrapper<TConnection, TTransaction>)base.Dapper;
 
     public async Task RunInTransactionAsync(Func<TTransaction, Task> callback, IsolationLevel? isolationLevel = default, CancellationToken cancellationToken = default)
         => await Dapper.RunInTransactionAsync(callback, isolationLevel, cancellationToken);

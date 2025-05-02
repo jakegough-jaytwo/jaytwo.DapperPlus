@@ -35,7 +35,6 @@ public interface IDapperWrapper
         CancellationToken cancellationToken = default);
 
     Task<IDataReader> ExecuteReaderAsync(
-        DbConnection connection,
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -75,8 +74,7 @@ public interface IDapperWrapper
         T? prototype = default,
         CancellationToken cancellationToken = default);
 
-    Task<GridReader> QueryMultipleAsync(
-        DbConnection connection,
+    Task<IGridReaderWrapper> QueryMultipleAsync(
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,

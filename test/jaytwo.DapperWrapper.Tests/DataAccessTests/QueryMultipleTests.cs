@@ -16,10 +16,10 @@ public class QueryMultipleTests
         // arrange
         var connection = Mock.Of<DbConnection>();
         var commandText = Guid.NewGuid().ToString();
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, default, default, default, default, default, default);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, default, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -29,7 +29,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -44,10 +44,10 @@ public class QueryMultipleTests
         var commandText = Guid.NewGuid().ToString();
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, default, default, default, default, default, cancellationToken);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, default, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -57,7 +57,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, cancellationToken);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -71,10 +71,10 @@ public class QueryMultipleTests
         var connection = Mock.Of<DbConnection>();
         var commandText = Guid.NewGuid().ToString();
         var parameters = new { Id = 1 };
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, parameters, default, default, default, default, default);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, parameters, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -84,7 +84,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, parameters);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, parameters);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -98,10 +98,10 @@ public class QueryMultipleTests
         var connection = Mock.Of<DbConnection>();
         var commandText = Guid.NewGuid().ToString();
         var transaction = new Mock<DbTransaction>().Object;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, default, transaction, default, default, default, default);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, default, transaction, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -111,7 +111,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, transaction);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, transaction);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -126,10 +126,10 @@ public class QueryMultipleTests
         var commandText = Guid.NewGuid().ToString();
         var parameters = new { Id = 1 };
         var transaction = new Mock<DbTransaction>().Object;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, parameters, transaction, default, default, default, default);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, parameters, transaction, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -139,7 +139,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, parameters, transaction);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, parameters, transaction);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -155,10 +155,10 @@ public class QueryMultipleTests
         var transaction = new Mock<DbTransaction>().Object;
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, default, transaction, default, default, default, cancellationToken);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, default, transaction, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -168,7 +168,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, transaction, cancellationToken);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, transaction, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -184,10 +184,10 @@ public class QueryMultipleTests
         var commandText = Guid.NewGuid().ToString();
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, parameters, default, default, default, default, cancellationToken);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, parameters, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -197,7 +197,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, parameters, cancellationToken);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, parameters, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -214,10 +214,10 @@ public class QueryMultipleTests
         var transaction = new Mock<DbTransaction>().Object;
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, parameters, transaction, default, default, default, cancellationToken);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, parameters, transaction, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -227,7 +227,7 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, parameters, transaction, cancellationToken);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, parameters, transaction, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -247,10 +247,10 @@ public class QueryMultipleTests
         var cancellationTimeoutSeconds = 11;
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var expectedResult = Mock.Of<MockGridReader>();
+        var expectedResult = Mock.Of<IGridReaderWrapper>();
 
-        Expression<Func<IDapperWrapper, Task<GridReader>>> testExpression =
-            x => x.QueryMultipleAsync(connection, commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, cancellationToken);
+        Expression<Func<IDapperWrapper, Task<IGridReaderWrapper>>> testExpression =
+            x => x.QueryMultipleAsync(commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -260,19 +260,10 @@ public class QueryMultipleTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunQueryMultipleAsync(connection, commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, cancellationToken);
+        var actualResult = await dataAccess.RunQueryMultipleAsync(commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
         mockDapper.Verify(testExpression, Times.Once);
-    }
-
-    public class MockGridReader
-        : GridReader
-    {
-        public MockGridReader()
-            : base(default!, default!, default)
-        {
-        }
     }
 }

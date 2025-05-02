@@ -18,7 +18,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, default, default, default, default, default, default, default);
+            x => x.ExecuteReaderAsync(commandText, default, default, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -28,7 +28,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -46,7 +46,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, default, default, default, default, default, default, cancellationToken);
+            x => x.ExecuteReaderAsync(commandText, default, default, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -56,7 +56,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, cancellationToken);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -73,7 +73,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, parameters, default, default, default, default, default, default);
+            x => x.ExecuteReaderAsync(commandText, parameters, default, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -83,7 +83,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, parameters);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, parameters);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -100,7 +100,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, default, transaction, default, default, default, default, default);
+            x => x.ExecuteReaderAsync(commandText, default, transaction, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -110,7 +110,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, transaction);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, transaction);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -128,7 +128,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, parameters, transaction, default, default, default, default, default);
+            x => x.ExecuteReaderAsync(commandText, parameters, transaction, default, default, default, default, default);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -138,7 +138,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, parameters, transaction);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, parameters, transaction);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -157,7 +157,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, default, transaction, default, default, default, default, cancellationToken);
+            x => x.ExecuteReaderAsync(commandText, default, transaction, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -167,7 +167,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, transaction, cancellationToken);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, transaction, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -186,7 +186,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, parameters, default, default, default, default, default, cancellationToken);
+            x => x.ExecuteReaderAsync(commandText, parameters, default, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -196,7 +196,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, parameters, cancellationToken);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, parameters, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -216,7 +216,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, parameters, transaction, default, default, default, default, cancellationToken);
+            x => x.ExecuteReaderAsync(commandText, parameters, transaction, default, default, default, default, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -226,7 +226,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, parameters, transaction, cancellationToken);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, parameters, transaction, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);
@@ -250,7 +250,7 @@ public class ExecuteReaderTests
         var expectedResult = Mock.Of<IDataReader>();
 
         Expression<Func<IDapperWrapper, Task<IDataReader>>> testExpression =
-            x => x.ExecuteReaderAsync(connection, commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, commandBehavior, cancellationToken);
+            x => x.ExecuteReaderAsync(commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, commandBehavior, cancellationToken);
 
         var mockDapper = new Mock<IDapperWrapper>();
         mockDapper
@@ -260,7 +260,7 @@ public class ExecuteReaderTests
         var dataAccess = new MyDataAccess(mockDapper.Object);
 
         // act
-        var actualResult = await dataAccess.RunExecuteReaderAsync(connection, commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, commandBehavior, cancellationToken);
+        var actualResult = await dataAccess.RunExecuteReaderAsync(commandText, parameters, transaction, commandTimeoutSeconds, commandType, cancellationTimeoutSeconds, commandBehavior, cancellationToken);
 
         // assert
         Assert.Equal(expectedResult, actualResult);

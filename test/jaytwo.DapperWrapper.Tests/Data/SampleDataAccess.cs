@@ -1,9 +1,6 @@
-using System.Collections;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using jaytwo.DapperWrapper.Tests.Data.Models;
-using static Dapper.SqlMapper;
 
 namespace jaytwo.DapperWrapper.Tests.Data;
 
@@ -52,9 +49,8 @@ SELECT * FROM samples WHERE sample_id = @sample_id2;
 ";
 
         var args = new { sample_id1 = sampleId1, sample_id2 = sampleId2 };
-        using (var connection = GetOrCreateConnection(transaction))
+        using var gridReadeer = await QueryMultipleAsync(sql, args, transaction, cancellationToken);
         {
-            var gridReadeer = await QueryMultipleAsync(connection, sql, args, transaction, cancellationToken);
             var rows1 = (await gridReadeer.ReadAsync<SampleRow>()).ToList();
             var rows2 = (await gridReadeer.ReadAsync<SampleRow>()).ToList();
             return (Rows1: rows1, Rows2: rows2);
@@ -72,8 +68,7 @@ SELECT * FROM samples WHERE sample_id = @sample_id2;
 
         var args = new { sample_id1 = sampleId1, sample_id2 = sampleId2 };
 
-        using (var connection = GetOrCreateConnection(transaction))
-        using (var reader = await ExecuteReaderAsync(connection, sql, args, transaction, commandBehavior: commandBehavior, cancellationToken: cancellationToken))
+        using (var reader = await ExecuteReaderAsync(sql, args, transaction, commandBehavior: commandBehavior, cancellationToken: cancellationToken))
         {
             do
             {

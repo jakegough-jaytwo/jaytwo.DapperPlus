@@ -30,13 +30,13 @@ public class DefaultDapperWrapper<TConnection, TTransaction>
     public async Task RunInTransactionAsync(Func<TTransaction, Task> callback, IsolationLevel? isolationLevel = default, CancellationToken cancellationToken = default)
     {
         using (var connection = CreateConnection())
-        using (var transaction = await OpenTransactionAsync(connection, isolationLevel, cancellationToken))
+        using (var transaction = await BeginTransactionAsync(connection, isolationLevel, cancellationToken))
         {
             await callback.Invoke(transaction);
             cancellationToken.ThrowIfCancellationRequested();
         }
     }
 
-    protected async Task<TTransaction> OpenTransactionAsync(TConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
-        => (TTransaction)await base.OpenTransactionAsync(connection, isolationLevel, cancellationToken);
+    protected async Task<TTransaction> BeginTransactionAsync(TConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
+        => (TTransaction)await base.BeginTransactionAsync(connection, isolationLevel, cancellationToken);
 }

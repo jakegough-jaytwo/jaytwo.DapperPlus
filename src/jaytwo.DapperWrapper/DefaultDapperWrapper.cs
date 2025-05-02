@@ -52,16 +52,26 @@ public class DefaultDapperWrapper
     public virtual async Task RunInTransactionAsync(Func<DbTransaction, Task> callback, IsolationLevel? isolationLevel = default, CancellationToken cancellationToken = default)
     {
         using (var connection = CreateConnection())
-        using (var transaction = await OpenTransactionAsync(connection, isolationLevel, cancellationToken))
+        using (var transaction = await BeginTransactionAsync(connection, isolationLevel, cancellationToken))
         {
             await callback.Invoke(transaction);
             cancellationToken.ThrowIfCancellationRequested();
         }
     }
 
+    public virtual async Task<DbTransaction> BeginTransactionAsync(DbConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
+    {
+        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(BeginTransactionAsync)).StartActive())
+        {
+            await OpenConnectionIfClosedAsync(connection, cancellationToken);
+
+            return await connection.BeginTransactionAsync(isolationLevel ?? TransactionIsolationLevel, cancellationToken);
+        }
+    }
+
     public virtual async Task CommitTransactionAsync(DbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        using (Tracer?.BuildSpan(GetType().Name + ".CommitTransaction").StartActive())
+        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(CommitTransactionAsync)).StartActive())
         {
             await transaction.CommitAsync(cancellationToken);
         }
@@ -69,7 +79,7 @@ public class DefaultDapperWrapper
 
     public virtual async Task RollbackTransactionAsync(DbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        using (Tracer?.BuildSpan(GetType().Name + ".RollbackTransaction").StartActive())
+        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(RollbackTransactionAsync)).StartActive())
         {
             await transaction.RollbackAsync(cancellationToken);
         }
@@ -112,7 +122,6 @@ public class DefaultDapperWrapper
             cancellationToken);
 
     public virtual async Task<IDataReader> ExecuteReaderAsync(
-        DbConnection connection,
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -125,7 +134,6 @@ public class DefaultDapperWrapper
             BuildDapperCommandContext(
                 commandText: commandText,
                 parameters: parameters,
-                connection: connection,
                 transaction: transaction,
                 commandTimeoutSeconds: commandTimeoutSeconds,
                 commandType: commandType,
@@ -190,8 +198,7 @@ public class DefaultDapperWrapper
                 cancellationTimeoutSeconds: cancellationTimeoutSeconds),
             cancellationToken);
 
-    public virtual async Task<GridReader> QueryMultipleAsync(
-        DbConnection connection,
+    public virtual async Task<IGridReaderWrapper> QueryMultipleAsync(
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -203,7 +210,6 @@ public class DefaultDapperWrapper
             BuildDapperCommandContext(
                 commandText: commandText,
                 parameters: parameters,
-                connection: connection,
                 transaction: transaction,
                 commandTimeoutSeconds: commandTimeoutSeconds,
                 commandType: commandType,
@@ -245,6 +251,7 @@ public class DefaultDapperWrapper
             async (conn, comm) => await conn.ExecuteAsync(comm),
             context,
             CommandFlags.Buffered,
+            disposeConnection: !context.HasConnection,
             cancellationToken);
 
     internal virtual async Task<T?> ExecuteScalarAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
@@ -252,20 +259,30 @@ public class DefaultDapperWrapper
             async (conn, comm) => await conn.ExecuteScalarAsync<T>(comm),
             context,
             CommandFlags.Buffered,
+            disposeConnection: !context.HasConnection,
             cancellationToken);
 
     internal virtual async Task<IDataReader> ExecuteReaderAsync(DapperCommandContext context, CommandBehavior commandBehavior, CancellationToken cancellationToken)
-        => await RunWithCancellationTokenAsync(
+    {
+        if (!context.HasConnection)
+        {
+            commandBehavior |= CommandBehavior.CloseConnection;
+        }
+
+        return await RunWithCancellationTokenAsync(
             async (conn, comm) => await conn.ExecuteReaderAsync(comm, commandBehavior),
             context,
             CommandFlags.None,
+            disposeConnection: false,
             cancellationToken);
+    }
 
     internal virtual async Task<IList<T>> QueryAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
         => await RunWithCancellationTokenAsync(
             async (conn, comm) => (await conn.QueryAsync<T>(comm)).ToList(),
             context,
             CommandFlags.Buffered,
+            disposeConnection: !context.HasConnection,
             cancellationToken);
 
     internal virtual async Task<T?> QuerySingleOrDefaultAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
@@ -273,6 +290,7 @@ public class DefaultDapperWrapper
             async (conn, comm) => await conn.QuerySingleOrDefaultAsync<T>(comm),
             context,
             CommandFlags.Buffered,
+            disposeConnection: !context.HasConnection,
             cancellationToken);
 
     internal virtual async Task<T> QuerySingleAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
@@ -280,26 +298,34 @@ public class DefaultDapperWrapper
             async (conn, comm) => await conn.QuerySingleAsync<T>(comm),
             context,
             CommandFlags.Buffered,
+            disposeConnection: !context.HasConnection,
             cancellationToken);
 
-    internal virtual async Task<GridReader> QueryMultipleAsync(DapperCommandContext context, CancellationToken cancellationToken)
-        => await RunWithCancellationTokenAsync(
-            async (conn, comm) => await conn.QueryMultipleAsync(comm),
+    internal virtual async Task<IGridReaderWrapper> QueryMultipleAsync(DapperCommandContext context, CancellationToken cancellationToken)
+    {
+        return await RunWithCancellationTokenAsync(
+            async (conn, comm) =>
+            {
+                var gridReader = await conn.QueryMultipleAsync(comm);
+                return new GridReaderWrapper(conn, gridReader, disposeConnection: !context.HasConnection);
+            },
             context,
             CommandFlags.Buffered,
+            disposeConnection: false,
             cancellationToken);
+    }
 
     internal virtual async Task<T> RunWithCancellationTokenAsync<T>(
         Func<DbConnection, CommandDefinition, Task<T>> queryDelegate,
         DapperCommandContext context,
         CommandFlags commandFlags,
+        bool disposeConnection,
         CancellationToken cancellationToken)
     {
         var tracerScopeName = GetType().Name + "." + nameof(RunWithCancellationTokenAsync);
         using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
 
-        var passedInConnection = context.Connection ?? context.Transaction?.Connection;
-        var connection = passedInConnection ?? _connectionFactory();
+        var connection = context.GetContextConnection() ?? _connectionFactory();
 
         // just making sure opening the connection so we have the telemetry if the operation includes opening the connection
         await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
@@ -321,7 +347,7 @@ public class DefaultDapperWrapper
             }
             finally
             {
-                if (passedInConnection == null)
+                if (disposeConnection)
                 {
                     await connection.DisposeAsync();
                 }
@@ -387,16 +413,6 @@ public class DefaultDapperWrapper
 
     protected internal virtual async Task OpenConnectionIfClosedAsync(DbConnection connection, CancellationToken cancellationToken)
         => await OpenConnectionIfClosedAsync(connection, Tracer, GetType().Name, cancellationToken);
-
-    protected virtual async Task<DbTransaction> OpenTransactionAsync(DbConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
-    {
-        using (Tracer?.BuildSpan(GetType().Name + ".BeginTransaction").StartActive())
-        {
-            await OpenConnectionIfClosedAsync(connection, cancellationToken);
-
-            return await connection.BeginTransactionAsync(isolationLevel ?? TransactionIsolationLevel, cancellationToken);
-        }
-    }
 
     private DapperCommandContext BuildDapperCommandContext(
         string commandText,
