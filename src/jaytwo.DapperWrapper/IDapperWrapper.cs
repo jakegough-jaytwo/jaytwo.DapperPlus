@@ -34,6 +34,17 @@ public interface IDapperWrapper
         int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default);
 
+    Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        CommandBehavior? commandBehavior = default,
+        CancellationToken cancellationToken = default);
+
     Task<IList<T>> QueryAsync<T>(
         string commandText,
         object? parameters = default,
@@ -65,6 +76,7 @@ public interface IDapperWrapper
         CancellationToken cancellationToken = default);
 
     Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,

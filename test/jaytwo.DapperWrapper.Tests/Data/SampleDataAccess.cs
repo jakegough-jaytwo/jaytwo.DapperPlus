@@ -1,6 +1,9 @@
+using System.Collections;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using jaytwo.DapperWrapper.Tests.Data.Models;
+using static Dapper.SqlMapper;
 
 namespace jaytwo.DapperWrapper.Tests.Data;
 
@@ -39,6 +42,51 @@ public class SampleDataAccess
         var args = new { sample_id = sampleId };
         var result = QueryUnbufferedAsync<SampleRow>(sql, args, transaction);
         return await result.ToListAsync(cancellationToken);
+    }
+
+    public async Task<(IList<SampleRow> Rows1, IList<SampleRow> Rows2)> QueryMultipleSampleRowAsync(string sampleId1, string sampleId2, DbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var sql = @"
+SELECT * FROM samples WHERE sample_id = @sample_id1;
+SELECT * FROM samples WHERE sample_id = @sample_id2;
+";
+
+        var args = new { sample_id1 = sampleId1, sample_id2 = sampleId2 };
+        using (var connection = GetOrCreateConnection(transaction))
+        {
+            var gridReadeer = await QueryMultipleAsync(connection, sql, args, transaction, cancellationToken);
+            var rows1 = (await gridReadeer.ReadAsync<SampleRow>()).ToList();
+            var rows2 = (await gridReadeer.ReadAsync<SampleRow>()).ToList();
+            return (Rows1: rows1, Rows2: rows2);
+        }
+    }
+
+    public async Task<IList<string>> ExecuteReaderSampleIdsAsync(string sampleId1, string sampleId2, DbTransaction? transaction = default, CommandBehavior? commandBehavior = default, CancellationToken cancellationToken = default)
+    {
+        var result = new List<string>();
+
+        var sql = @"
+SELECT * FROM samples WHERE sample_id = @sample_id1;
+SELECT * FROM samples WHERE sample_id = @sample_id2;
+";
+
+        var args = new { sample_id1 = sampleId1, sample_id2 = sampleId2 };
+
+        using (var connection = GetOrCreateConnection(transaction))
+        using (var reader = await ExecuteReaderAsync(connection, sql, args, transaction, commandBehavior: commandBehavior, cancellationToken: cancellationToken))
+        {
+            do
+            {
+                while (reader.Read())
+                {
+                    var item = reader.GetString(reader.GetOrdinal("sample_id"));
+                    result.Add(item);
+                }
+            }
+            while (reader.NextResult());
+        }
+
+        return result;
     }
 
     public async Task<SampleRow> SelectSampleAsync(string sampleId, DbTransaction? transaction, CancellationToken cancellationToken)

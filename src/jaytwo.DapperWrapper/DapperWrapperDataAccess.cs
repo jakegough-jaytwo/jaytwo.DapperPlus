@@ -9,12 +9,6 @@ namespace jaytwo.DapperWrapper;
 public abstract class DapperWrapperDataAccess
     : IDapperWrapperDataAccess
 {
-    static DapperWrapperDataAccess()
-    {
-        // TODO: it doesn't seem right to set this (globally) here...
-        DefaultTypeMap.MatchNamesWithUnderscores = true;
-    }
-
     protected DapperWrapperDataAccess(IDapperWrapper dapper)
     {
         Dapper = dapper;
@@ -27,6 +21,9 @@ public abstract class DapperWrapperDataAccess
 
     public virtual async Task RunInTransactionAsync(Func<DbTransaction, Task> callback, IsolationLevel? isolationLevel = default, CancellationToken cancellationToken = default)
         => await Dapper.RunInTransactionAsync(callback, isolationLevel, cancellationToken);
+
+    protected virtual DbConnection GetOrCreateConnection(DbTransaction? transaction)
+        => transaction?.Connection ?? CreateConnection();
 
     protected virtual DbConnection CreateConnection()
         => Dapper.CreateConnection();
@@ -169,6 +166,87 @@ public abstract class DapperWrapperDataAccess
             commandTimeoutSeconds: commandTimeoutSeconds,
             commandType: commandType,
             cancellationTimeoutSeconds: cancellationTimeoutSeconds,
+            cancellationToken: cancellationToken);
+
+    protected async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(
+            connection: connection,
+            commandText: commandText,
+            parameters: default,
+            transaction: default,
+            commandTimeoutSeconds: default,
+            commandType: default,
+            cancellationTimeoutSeconds: default,
+            cancellationToken: cancellationToken);
+
+    protected async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        DbTransaction? transaction,
+        CancellationToken cancellationToken = default)
+        => await ExecuteReaderAsync(
+            connection: connection,
+            commandText: commandText,
+            parameters: default,
+            transaction: transaction,
+            commandTimeoutSeconds: default,
+            commandType: default,
+            cancellationTimeoutSeconds: default,
+            cancellationToken: cancellationToken);
+
+    protected async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        object? parameters,
+        CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(
+            connection: connection,
+            commandText: commandText,
+            parameters: parameters,
+            transaction: default,
+            commandTimeoutSeconds: default,
+            commandType: default,
+            cancellationTimeoutSeconds: default,
+            cancellationToken: cancellationToken);
+
+    protected async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        object? parameters,
+        DbTransaction? transaction,
+        CancellationToken cancellationToken)
+        => await ExecuteReaderAsync(
+            connection: connection,
+            commandText: commandText,
+            parameters: parameters,
+            transaction: transaction,
+            commandTimeoutSeconds: default,
+            commandType: default,
+            cancellationTimeoutSeconds: default,
+            cancellationToken: cancellationToken);
+
+    protected async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        CommandBehavior? commandBehavior = default,
+        CancellationToken cancellationToken = default)
+        => await Dapper.ExecuteReaderAsync(
+            connection: connection,
+            commandText: commandText,
+            parameters: parameters,
+            transaction: transaction,
+            commandTimeoutSeconds: commandTimeoutSeconds,
+            commandType: commandType,
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
+            commandBehavior: commandBehavior,
             cancellationToken: cancellationToken);
 
     protected async Task<IList<T>> QueryAsync<T>(string commandText, CancellationToken cancellationToken)
@@ -390,8 +468,12 @@ public abstract class DapperWrapperDataAccess
             prototype: prototype,
             cancellationToken: cancellationToken);
 
-    protected async Task<GridReader> QueryMultipleAsync(string commandText, CancellationToken cancellationToken)
+    protected async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
+        string commandText,
+        CancellationToken cancellationToken)
         => await QueryMultipleAsync(
+            connection: connection,
             commandText: commandText,
             parameters: default,
             transaction: default,
@@ -401,10 +483,12 @@ public abstract class DapperWrapperDataAccess
             cancellationToken: cancellationToken);
 
     protected async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         DbTransaction? transaction,
         CancellationToken cancellationToken = default)
         => await QueryMultipleAsync(
+            connection: connection,
             commandText: commandText,
             parameters: default,
             transaction: transaction,
@@ -414,10 +498,12 @@ public abstract class DapperWrapperDataAccess
             cancellationToken: cancellationToken);
 
     protected async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         object? parameters,
         CancellationToken cancellationToken)
         => await QueryMultipleAsync(
+            connection: connection,
             commandText: commandText,
             parameters: parameters,
             transaction: default,
@@ -427,11 +513,13 @@ public abstract class DapperWrapperDataAccess
             cancellationToken: cancellationToken);
 
     protected async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         object? parameters,
         DbTransaction? transaction,
         CancellationToken cancellationToken)
         => await QueryMultipleAsync(
+            connection: connection,
             commandText: commandText,
             parameters: parameters,
             transaction: transaction,
@@ -441,6 +529,7 @@ public abstract class DapperWrapperDataAccess
             cancellationToken: cancellationToken);
 
     protected async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -449,6 +538,7 @@ public abstract class DapperWrapperDataAccess
         int? cancellationTimeoutSeconds = default,
         CancellationToken cancellationToken = default)
         => await Dapper.QueryMultipleAsync(
+            connection: connection,
             commandText: commandText,
             parameters: parameters,
             transaction: transaction,

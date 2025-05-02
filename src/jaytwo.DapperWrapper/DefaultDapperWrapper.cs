@@ -111,6 +111,28 @@ public class DefaultDapperWrapper
                 cancellationTimeoutSeconds: cancellationTimeoutSeconds),
             cancellationToken);
 
+    public virtual async Task<IDataReader> ExecuteReaderAsync(
+        DbConnection connection,
+        string commandText,
+        object? parameters = default,
+        DbTransaction? transaction = default,
+        int? commandTimeoutSeconds = default,
+        CommandType? commandType = default,
+        int? cancellationTimeoutSeconds = default,
+        CommandBehavior? commandBehavior = default,
+        CancellationToken cancellationToken = default)
+        => await ExecuteReaderAsync(
+            BuildDapperCommandContext(
+                commandText: commandText,
+                parameters: parameters,
+                connection: connection,
+                transaction: transaction,
+                commandTimeoutSeconds: commandTimeoutSeconds,
+                commandType: commandType,
+                cancellationTimeoutSeconds: cancellationTimeoutSeconds),
+            commandBehavior ?? CommandBehavior.Default,
+            cancellationToken);
+
     public virtual async Task<IList<T>> QueryAsync<T>(
         string commandText,
         object? parameters = default,
@@ -169,6 +191,7 @@ public class DefaultDapperWrapper
             cancellationToken);
 
     public virtual async Task<GridReader> QueryMultipleAsync(
+        DbConnection connection,
         string commandText,
         object? parameters = default,
         DbTransaction? transaction = default,
@@ -180,6 +203,7 @@ public class DefaultDapperWrapper
             BuildDapperCommandContext(
                 commandText: commandText,
                 parameters: parameters,
+                connection: connection,
                 transaction: transaction,
                 commandTimeoutSeconds: commandTimeoutSeconds,
                 commandType: commandType,
@@ -230,6 +254,13 @@ public class DefaultDapperWrapper
             CommandFlags.Buffered,
             cancellationToken);
 
+    internal virtual async Task<IDataReader> ExecuteReaderAsync(DapperCommandContext context, CommandBehavior commandBehavior, CancellationToken cancellationToken)
+        => await RunWithCancellationTokenAsync(
+            async (conn, comm) => await conn.ExecuteReaderAsync(comm, commandBehavior),
+            context,
+            CommandFlags.None,
+            cancellationToken);
+
     internal virtual async Task<IList<T>> QueryAsync<T>(DapperCommandContext context, CancellationToken cancellationToken)
         => await RunWithCancellationTokenAsync(
             async (conn, comm) => (await conn.QueryAsync<T>(comm)).ToList(),
@@ -267,8 +298,10 @@ public class DefaultDapperWrapper
         var tracerScopeName = GetType().Name + "." + nameof(RunWithCancellationTokenAsync);
         using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
 
+        var passedInConnection = context.Connection ?? context.Transaction?.Connection;
+        var connection = passedInConnection ?? _connectionFactory();
+
         // just making sure opening the connection so we have the telemetry if the operation includes opening the connection
-        var connection = context.Transaction?.Connection ?? _connectionFactory();
         await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
 
         using (var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(context.CancellationTimeoutSeconds)))
@@ -288,7 +321,7 @@ public class DefaultDapperWrapper
             }
             finally
             {
-                if (context.Transaction == null)
+                if (passedInConnection == null)
                 {
                     await connection.DisposeAsync();
                 }
@@ -368,6 +401,7 @@ public class DefaultDapperWrapper
     private DapperCommandContext BuildDapperCommandContext(
         string commandText,
         object? parameters = default,
+        DbConnection? connection = default,
         DbTransaction? transaction = default,
         int? commandTimeoutSeconds = default,
         CommandType? commandType = default,
@@ -376,6 +410,7 @@ public class DefaultDapperWrapper
         {
             CommandText = commandText,
             Parameters = parameters,
+            Connection = connection,
             Transaction = transaction,
             CommandTimeoutSeconds = commandTimeoutSeconds ?? CommandTimeoutSeconds,
             CommandType = commandType ?? CommandType.Text,

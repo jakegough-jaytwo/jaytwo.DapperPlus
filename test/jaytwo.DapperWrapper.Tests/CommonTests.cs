@@ -1,5 +1,8 @@
 using System.Data;
+using System.Transactions;
+using Dapper;
 using jaytwo.DapperWrapper.Tests.Data;
+using jaytwo.DapperWrapper.Tests.Data.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -9,6 +12,11 @@ public class CommonTests : IClassFixture<TestFixture>
 {
     private readonly ITestOutputHelper _output;
     private readonly DataAccessFactory _dataAccessProvider;
+
+    static CommonTests()
+    {
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+    }
 
     public CommonTests(ITestOutputHelper output, TestFixture fixture)
     {
@@ -82,7 +90,7 @@ public class CommonTests : IClassFixture<TestFixture>
 
                 // act
                 var rowsInsideTransaction = await dataAccess.SelectSampleAsync(key, transaction);
-                await transaction.RollbackAsync(); // in SqlServer, if the transaction is still open, the following select outside the transaction will hang (and i don't want to change the sql statements to be SqlServer specific)
+                await transaction.RollbackAsync(); // TODO in SqlServer, if the transaction is still open, the following select outside the transaction will hang (and i don't want to change the sql statements to be SqlServer specific)
 
                 var rowsOutsideTransaction = await dataAccess.SelectSampleOrDefaultAsync(key);
 
@@ -94,7 +102,116 @@ public class CommonTests : IClassFixture<TestFixture>
             });
     }
 
-    // TODO: tests for querymultiple
+    [Theory]
+    [MemberData(nameof(GetMonikerTestCases))]
+    public async Task CanQueryMultipleAsync(string moniker)
+    {
+        // arrange
+        var key1 = Guid.NewGuid().ToString();
+        var key2 = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        await dataAccess.InsertSampleAsync(key1, value, utcNow);
+        await dataAccess.InsertSampleAsync(key2, value, utcNow);
+
+        // act
+        var multi = await dataAccess.QueryMultipleSampleRowAsync(key1, key2);
+
+        // assert
+        var row1 = Assert.Single(multi.Rows1)!;
+        Assert.Equal(key1, row1.SampleId);
+        Assert.Equal(value, row1.Value!.Value, precision: 4);
+        Assert.Equal(utcNow, row1.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+
+        var row2 = Assert.Single(multi.Rows2)!;
+        Assert.Equal(key2, row2.SampleId);
+        Assert.Equal(value, row2.Value!.Value, precision: 4);
+        Assert.Equal(utcNow, row2.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+    }
+
+    [Theory]
+    [MemberData(nameof(GetMonikerTestCases))]
+    public async Task CanQueryMultipleAsync_with_transaction(string moniker)
+    {
+        // arrange
+        var key1 = Guid.NewGuid().ToString();
+        var key2 = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        await dataAccess.RunInTransactionAsync(async transaction =>
+        {
+            await dataAccess.InsertSampleAsync(key1, value, utcNow, transaction);
+            await dataAccess.InsertSampleAsync(key2, value, utcNow, transaction);
+
+            // act
+            var multi = await dataAccess.QueryMultipleSampleRowAsync(key1, key2, transaction);
+
+            // assert
+            var row1 = Assert.Single(multi.Rows1)!;
+            Assert.Equal(key1, row1.SampleId);
+            Assert.Equal(value, row1.Value!.Value, precision: 4);
+            Assert.Equal(utcNow, row1.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+
+            var row2 = Assert.Single(multi.Rows2)!;
+            Assert.Equal(key2, row2.SampleId);
+            Assert.Equal(value, row2.Value!.Value, precision: 4);
+            Assert.Equal(utcNow, row2.AsOfDateUtc!.Value, precision: TimeSpan.FromSeconds(1));
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(GetMonikerTestCases))]
+    public async Task CanExecuteReaderAsync(string moniker)
+    {
+        // arrange
+        var key1 = Guid.NewGuid().ToString();
+        var key2 = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+        await dataAccess.InsertSampleAsync(key1, value, utcNow);
+        await dataAccess.InsertSampleAsync(key2, value, utcNow);
+
+        // act
+        var ids = await dataAccess.ExecuteReaderSampleIdsAsync(key1, key2);
+
+        // assert
+        Assert.Contains(key1, ids);
+        Assert.Contains(key2, ids);
+        Assert.Equal(2, ids.Count);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetMonikerTestCases))]
+    public async Task CanExecuteReaderAsync_with_transaction(string moniker)
+    {
+        // arrange
+        var key1 = Guid.NewGuid().ToString();
+        var key2 = Guid.NewGuid().ToString();
+        var value = 123.456;
+        var utcNow = DateTime.UtcNow;
+
+        var dataAccess = _dataAccessProvider.GetDataAccess(moniker);
+
+        await dataAccess.RunInTransactionAsync(async transaction =>
+        {
+            await dataAccess.InsertSampleAsync(key1, value, utcNow, transaction);
+            await dataAccess.InsertSampleAsync(key2, value, utcNow, transaction);
+
+            // act
+            var ids = await dataAccess.ExecuteReaderSampleIdsAsync(key1, key2, transaction);
+
+            // assert
+            Assert.Contains(key1, ids);
+            Assert.Contains(key2, ids);
+            Assert.Equal(2, ids.Count);
+        });
+    }
 
     [Theory]
     [MemberData(nameof(GetMonikerTestCases))]

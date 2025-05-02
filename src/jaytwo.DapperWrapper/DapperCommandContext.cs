@@ -14,6 +14,8 @@ internal class DapperCommandContext
 
     public object? Parameters { get; set; }
 
+    public DbConnection? Connection { get; set; }
+
     public DbTransaction? Transaction { get; set; }
 
     public int CommandTimeoutSeconds { get; set; }

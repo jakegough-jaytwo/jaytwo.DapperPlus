@@ -16,14 +16,14 @@ public class DapperWrapperTests
     public void CreateConnection()
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
-        var dapperWrapper = new DefaultDapperWrapper(() => mockConnection.Object, default);
+        var connection = Mock.Of<DbConnection>();
+        var dapperWrapper = new DefaultDapperWrapper(() => connection, default);
 
         // Act
         var result = dapperWrapper.CreateConnection();
 
         // Assert
-        Assert.Same(result, mockConnection.Object);
+        Assert.Same(result, connection);
     }
 
     [Theory]
@@ -32,11 +32,11 @@ public class DapperWrapperTests
     public async Task ExecuteAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = Mock.Of<DbConnection>();
+        var connection = Mock.Of<DbConnection>();
         var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
         var commandTimeoutSeconds = 3;
@@ -80,11 +80,11 @@ public class DapperWrapperTests
     public async Task ExecuteScalarAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = Mock.Of<DbConnection>();
+        var connection = Mock.Of<DbConnection>();
         var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
         var commandTimeoutSeconds = 3;
@@ -128,11 +128,11 @@ public class DapperWrapperTests
     public async Task QuerySingleAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = Mock.Of<DbConnection>();
+        var connection = Mock.Of<DbConnection>();
         var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
         var commandTimeoutSeconds = 3;
@@ -178,14 +178,13 @@ public class DapperWrapperTests
     public async Task QuerySingleOrDefaultAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
-        var mockTransaction = new Mock<DbTransaction>();
+        var connection = Mock.Of<DbConnection>();
+        var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection.Object;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
-        var transaction = mockTransaction.Object;
         var commandTimeoutSeconds = 3;
         var cancellationTimeoutSeconds = 5;
         var expectedResult = new MyRecord() { Id = 7 };
@@ -229,14 +228,13 @@ public class DapperWrapperTests
     public async Task QueryAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
-        var mockTransaction = new Mock<DbTransaction>();
+        var connection = Mock.Of<DbConnection>();
+        var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection.Object;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
-        var transaction = mockTransaction.Object;
         var commandTimeoutSeconds = 3;
         var cancellationTimeoutSeconds = 5;
         var expectedResult = new[] { new MyRecord() { Id = 7 } };
@@ -280,14 +278,13 @@ public class DapperWrapperTests
     public async Task QueryMultipleAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
-        var mockTransaction = new Mock<DbTransaction>();
+        var connection = Mock.Of<DbConnection>();
+        var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection.Object;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
-        var transaction = mockTransaction.Object;
         var commandTimeoutSeconds = 3;
         var cancellationTimeoutSeconds = 5;
         var expectedResult = default(GridReader)!;
@@ -310,6 +307,7 @@ public class DapperWrapperTests
 
         // Act
         var actualResult = await dapperWrapper.Object.QueryMultipleAsync(
+            connection,
             commandText,
             parameters,
             transaction,
@@ -329,14 +327,13 @@ public class DapperWrapperTests
     public void QueryUnbufferedAsync(CommandType commandType)
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
-        var mockTransaction = new Mock<DbTransaction>();
+        var connection = Mock.Of<DbConnection>();
+        var transaction = Mock.Of<DbTransaction>();
         var cancellationToken = new CancellationTokenSource().Token;
 
-        var connectionFactory = () => mockConnection.Object;
+        var connectionFactory = () => connection;
         var commandText = "hello world";
         var parameters = new { Id = 1 };
-        var transaction = mockTransaction.Object;
         var commandTimeoutSeconds = 3;
         var cancellationTimeoutSeconds = 5;
         var expectedResult = AsyncEnumerable.Empty<MyRecord>();
@@ -376,11 +373,11 @@ public class DapperWrapperTests
     public async Task QueryUnbufferedAsync_cancellationToken_is_preserved()
     {
         // Arrange
-        var mockConnection = new Mock<DbConnection>();
+        var connection = new Mock<DbConnection>();
         using var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
 
-        var connectionFactory = () => mockConnection.Object;
+        var connectionFactory = () => connection.Object;
 
         var dapperWrapper = new DefaultDapperWrapper(connectionFactory);
 
