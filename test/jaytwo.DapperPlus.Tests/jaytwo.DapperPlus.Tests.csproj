@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\jaytwo.DapperPlus\jaytwo.DapperPlus.csproj" />
+    <ProjectReference Include="..\..\src\jaytwo.DapperPlus.MySql\jaytwo.DapperPlus.MySql.csproj" />
+    <ProjectReference Include="..\..\src\jaytwo.DapperPlus.Postgres\jaytwo.DapperPlus.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\jaytwo.DapperPlus.SqlServer\jaytwo.DapperPlus.SqlServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.4" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*" />
+    <None Update="testsettings.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
