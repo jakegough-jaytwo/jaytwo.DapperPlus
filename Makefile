@@ -1,6 +1,6 @@
-BUILD_SLN=./jaytwo.DapperWrapper.sln
-BUILD_DIRS=./src/jaytwo.DapperWrapper:./src/jaytwo.DapperWrapper.MySql:./src/jaytwo.DapperWrapper.Postgres
-BUILD_TEST_DIRS=./test/jaytwo.DapperWrapper.Tests
+BUILD_SLN=./jaytwo.DapperPlus.sln
+BUILD_DIRS=./src/jaytwo.DapperPlus:./src/jaytwo.DapperPlus.MySql:./src/jaytwo.DapperPlus.Postgres
+BUILD_TEST_DIRS=./test/jaytwo.DapperPlus.Tests
 
 NUGET_SOURCE_URL?=https://api.nuget.org/v3/index.json
 NUGET_API_KEY?=__missing_api_key__
