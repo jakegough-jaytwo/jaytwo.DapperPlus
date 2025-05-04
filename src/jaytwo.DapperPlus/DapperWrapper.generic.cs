@@ -1,6 +1,5 @@
 using System.Data;
 using System.Data.Common;
-using OpenTracing;
 
 namespace jaytwo.DapperPlus;
 
@@ -13,14 +12,12 @@ public class DapperWrapper<TConnection, TTransaction>
         Func<TConnection> connectionFactory,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
         : base(
             connectionFactory: connectionFactory,
             transactionIsolationLevel: transactionIsolationLevel,
             commandTimeoutSeconds: commandTimeoutSeconds,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            tracer: tracer)
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds)
     {
     }
 

@@ -2,7 +2,6 @@ using System.Data;
 using System.Threading.Tasks;
 using Npgsql;
 using Npgsql.Replication;
-using OpenTracing;
 
 namespace jaytwo.DapperPlus.Postgres;
 
@@ -13,14 +12,12 @@ public class PostgresDapperWrapper
         string connectionString,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
         : base(
             connectionFactory: () => new NpgsqlConnection(connectionString),
             transactionIsolationLevel: transactionIsolationLevel,
             commandTimeoutSeconds: commandTimeoutSeconds,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            tracer: tracer)
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds)
     {
     }
 
@@ -28,14 +25,12 @@ public class PostgresDapperWrapper
         Func<NpgsqlConnection> connectionFactory,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
         : base(
             connectionFactory: connectionFactory,
             transactionIsolationLevel: transactionIsolationLevel,
             commandTimeoutSeconds: commandTimeoutSeconds,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            tracer: tracer)
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds)
     {
     }
 

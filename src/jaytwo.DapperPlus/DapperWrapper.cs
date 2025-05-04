@@ -1,8 +1,9 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Dapper;
-using OpenTracing;
+using OpenTelemetry.Trace;
 using static Dapper.SqlMapper;
 
 namespace jaytwo.DapperPlus;
@@ -20,20 +21,15 @@ public class DapperWrapper
         Func<DbConnection> connectionFactory,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
     {
         _connectionFactory = connectionFactory;
         TransactionIsolationLevel = transactionIsolationLevel ?? DefaultTransactionIsolationLevel;
         CommandTimeoutSeconds = commandTimeoutSeconds ?? DefaultCommandTimeoutSeconds;
         CancellationTimeoutSeconds = cancellationTimeoutSeconds ?? DefaultCancellationTimeoutSeconds;
-        Tracer = tracer;
     }
 
-    internal DapperWrapper(Func<DbConnection> connectionFactory)
-        : this(connectionFactory, default, default, default, default)
-    {
-    }
+    public static string ActivitySourceName { get; } = "jaytwo.DapperPlus.DapperWrapper";
 
     public IsolationLevel TransactionIsolationLevel { get; }
 
@@ -41,7 +37,7 @@ public class DapperWrapper
 
     public int CommandTimeoutSeconds { get; }
 
-    protected ITracer? Tracer { get; }
+    private static ActivitySource ActivitySource { get; } = new(ActivitySourceName);
 
     public virtual async Task<object> HealthCheckAsync(CancellationToken cancellationToken = default)
         => await new DatabaseHealthCheck<DapperWrapper>(this).HealthCheckAsync(cancellationToken);
@@ -61,7 +57,7 @@ public class DapperWrapper
 
     public virtual async Task<DbTransaction> BeginTransactionAsync(DbConnection connection, IsolationLevel? isolationLevel, CancellationToken cancellationToken)
     {
-        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(BeginTransactionAsync)).StartActive())
+        using (var activity = ActivitySource.StartActivity(GetType().Name + "." + nameof(BeginTransactionAsync), ActivityKind.Client))
         {
             await OpenConnectionIfClosedAsync(connection, cancellationToken);
 
@@ -71,7 +67,7 @@ public class DapperWrapper
 
     public virtual async Task CommitTransactionAsync(DbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(CommitTransactionAsync)).StartActive())
+        using (var activity = ActivitySource.StartActivity(GetType().Name + "." + nameof(CommitTransactionAsync), ActivityKind.Client))
         {
             await transaction.CommitAsync(cancellationToken);
         }
@@ -79,7 +75,7 @@ public class DapperWrapper
 
     public virtual async Task RollbackTransactionAsync(DbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        using (Tracer?.BuildSpan(GetType().Name + "." + nameof(RollbackTransactionAsync)).StartActive())
+        using (var activity = ActivitySource.StartActivity(GetType().Name + "." + nameof(RollbackTransactionAsync), ActivityKind.Client))
         {
             await transaction.RollbackAsync(cancellationToken);
         }
@@ -235,14 +231,19 @@ public class DapperWrapper
                 cancellationTimeoutSeconds: cancellationTimeoutSeconds));
 #endif
 
-    internal static async Task OpenConnectionIfClosedAsync(DbConnection connection, ITracer? tracer = default, string? tracerScopeNamePrefix = default, CancellationToken cancellationToken = default)
+    internal static async Task OpenConnectionIfClosedAsync(DbConnection connection, string? activityNamePrefix = default, CancellationToken cancellationToken = default)
     {
         if (connection.State == ConnectionState.Closed)
         {
-            using (tracer?.BuildSpan(tracerScopeNamePrefix + ".OpenConnection").StartActive())
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
+            await OpenConnectionAsync(connection, activityNamePrefix, cancellationToken);
+        }
+    }
+
+    internal static async Task OpenConnectionAsync(DbConnection connection, string? activityNamePrefix = default, CancellationToken cancellationToken = default)
+    {
+        using (var activity = ActivitySource.StartActivity(activityNamePrefix + nameof(OpenConnectionAsync), ActivityKind.Client))
+        {
+            await connection.OpenAsync(cancellationToken);
         }
     }
 
@@ -322,13 +323,14 @@ public class DapperWrapper
         bool disposeConnection,
         CancellationToken cancellationToken)
     {
-        var tracerScopeName = GetType().Name + "." + nameof(RunWithCancellationTokenAsync);
-        using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
+        var activityName = GetType().Name + "." + nameof(RunWithCancellationTokenAsync);
+        using var activity = ActivitySource.StartActivity(activityName, ActivityKind.Client);
+        activity?.SetTag("db.commandText", context.CommandText);
 
         var connection = context.GetContextConnection() ?? _connectionFactory();
 
-        // just making sure opening the connection so we have the telemetry if the operation includes opening the connection
-        await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
+        // just making sure to open the connection explicitly so we have the telemetry if the operation requires opening the connection
+        await OpenConnectionIfClosedAsync(connection, activityNamePrefix: activityName, cancellationToken);
 
         using (var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(context.CancellationTimeoutSeconds)))
         using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token))
@@ -342,7 +344,8 @@ public class DapperWrapper
             }
             catch (Exception ex)
             {
-                var message = ex.Message;
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.RecordException(ex);
                 throw;
             }
             finally
@@ -371,16 +374,20 @@ public class DapperWrapper
         DapperCommandContext context,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var tracerScopeName = GetType().Name + "." + nameof(QueryUnbufferedAsync);
-        using var tracerScope = Tracer?.BuildSpan(tracerScopeName).StartActive();
+        var activityName = GetType().Name + "." + nameof(QueryUnbufferedAsync);
+        using var activity = ActivitySource.StartActivity(activityName, ActivityKind.Client);
+        activity?.SetTag("db.commandText", context.CommandText);
 
-        // just making sure opening the connection doesn't throw off the telemetry for the first row time
-        var connection = context.Transaction?.Connection ?? _connectionFactory();
-        await OpenConnectionIfClosedAsync(connection, Tracer, tracerScopeName, cancellationToken);
+        var connection = context.GetContextConnection() ?? _connectionFactory();
+
+        // just making sure to open the connection explicitly so we have the telemetry if the operation requires opening the connection
+        await OpenConnectionIfClosedAsync(connection, activityNamePrefix: activityName, cancellationToken);
 
         using var timeoutCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(context.CancellationTimeoutSeconds));
         using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token);
-        var firstRowTracerScope = Tracer?.BuildSpan(tracerScopeName + ".FirstRow").StartActive();
+        var firstRowActivity = ActivitySource.StartActivity(activityName + ".FirstRow", ActivityKind.Client);
+        activity?.SetTag("firstRow.span.name", firstRowActivity?.DisplayName);
+
         try
         {
             var rows = queryDelegate(connection).WithCancellation(linkedTokenSource.Token);
@@ -389,7 +396,7 @@ public class DapperWrapper
 
             if (await enumerator.MoveNextAsync())
             {
-                firstRowTracerScope?.Dispose();
+                firstRowActivity?.Dispose();
 
                 yield return enumerator.Current;
 
@@ -401,7 +408,9 @@ public class DapperWrapper
         }
         finally
         {
-            firstRowTracerScope?.Dispose();
+            // TODO: we can't do a catch with a yield, figure out if there's some other way to wrap a try/catch so we can do activity?.SetStatus(ActivityStatusCode.Error, ex.Message)
+
+            firstRowActivity?.Dispose();
 
             if (context.Transaction == null)
             {
@@ -412,7 +421,7 @@ public class DapperWrapper
 #endif
 
     protected internal virtual async Task OpenConnectionIfClosedAsync(DbConnection connection, CancellationToken cancellationToken)
-        => await OpenConnectionIfClosedAsync(connection, Tracer, GetType().Name, cancellationToken);
+        => await OpenConnectionIfClosedAsync(connection, GetType().Name, cancellationToken);
 
     private DapperCommandContext BuildDapperCommandContext(
         string commandText,

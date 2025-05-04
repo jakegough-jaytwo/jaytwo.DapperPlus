@@ -1,6 +1,5 @@
 using System.Data;
 using MySql.Data.MySqlClient;
-using OpenTracing;
 
 namespace jaytwo.DapperPlus.MySql;
 
@@ -11,14 +10,12 @@ public class MySqlDapperWrapper
         string connectionString,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
         : base(
             connectionFactory: () => new MySqlConnection(connectionString),
             transactionIsolationLevel: transactionIsolationLevel,
             commandTimeoutSeconds: commandTimeoutSeconds,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            tracer: tracer)
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds)
     {
     }
 
@@ -26,14 +23,12 @@ public class MySqlDapperWrapper
         Func<MySqlConnection> connectionFactory,
         IsolationLevel? transactionIsolationLevel = DefaultTransactionIsolationLevel,
         int? commandTimeoutSeconds = DefaultCommandTimeoutSeconds,
-        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds,
-        ITracer? tracer = default)
+        int? cancellationTimeoutSeconds = DefaultCancellationTimeoutSeconds)
         : base(
             connectionFactory: connectionFactory,
             transactionIsolationLevel: transactionIsolationLevel,
             commandTimeoutSeconds: commandTimeoutSeconds,
-            cancellationTimeoutSeconds: cancellationTimeoutSeconds,
-            tracer: tracer)
+            cancellationTimeoutSeconds: cancellationTimeoutSeconds)
     {
     }
 
