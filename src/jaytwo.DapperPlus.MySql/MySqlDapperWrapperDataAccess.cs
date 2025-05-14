@@ -5,8 +5,8 @@ namespace jaytwo.DapperPlus.MySql;
 public abstract class MySqlDapperWrapperDataAccess
     : DapperWrapperDataAccess<MySqlConnection, MySqlTransaction>, IMySqlDapperWrapperDataAccess
 {
-    public MySqlDapperWrapperDataAccess(string defaultConnectionString)
-        : base(new MySqlDapperWrapper(defaultConnectionString))
+    public MySqlDapperWrapperDataAccess(string connectionString)
+        : base(new MySqlDapperWrapper(connectionString))
     {
     }
 

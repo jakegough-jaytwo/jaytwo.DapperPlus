@@ -5,8 +5,8 @@ namespace jaytwo.DapperPlus.Postgres;
 public abstract class PostgresDapperWrapperDataAccess
     : DapperWrapperDataAccess<NpgsqlConnection, NpgsqlTransaction>, IPostgresDapperWrapperDataAccess
 {
-    public PostgresDapperWrapperDataAccess(string defaultConnectionString)
-        : base(new PostgresDapperWrapper(defaultConnectionString))
+    public PostgresDapperWrapperDataAccess(string connectionString)
+        : base(new PostgresDapperWrapper(connectionString))
     {
     }
 
