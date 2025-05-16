@@ -29,6 +29,12 @@ public class DapperWrapper
         CancellationTimeoutSeconds = cancellationTimeoutSeconds ?? DefaultCancellationTimeoutSeconds;
     }
 
+    // this constructor overload is purely so Moq can find the single-argument constructor
+    internal DapperWrapper(Func<DbConnection> connectionFactory)
+        : this(connectionFactory, default, default, default)
+    {
+    }
+
     public static string ActivitySourceName { get; } = "jaytwo.DapperPlus.DapperWrapper";
 
     public IsolationLevel TransactionIsolationLevel { get; }

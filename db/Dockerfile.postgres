@@ -1,4 +1,5 @@
-FROM postgres:9.6.8
+FROM postgres:9
+
 COPY postgres-init /docker-entrypoint-initdb.d
 
 ENV POSTGRES_USER=pguser

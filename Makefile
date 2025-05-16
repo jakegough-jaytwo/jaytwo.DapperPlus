@@ -114,6 +114,8 @@ testernet-run:
 testernet-clean:
 	docker compose --project-name "${DOCKER_COMPOSE_PROJECT}" --profile "testernet" down -v --remove-orphans
 
+testernet-down: testernet-clean
+
 docker-builder:
 	# building the base image to force caching those layers in an otherwise discarded stage of the multistage dockerfile
 	docker build -t ${DOCKER_BASE_TAG} . --target base --pull
