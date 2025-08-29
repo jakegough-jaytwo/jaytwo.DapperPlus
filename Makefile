@@ -1,7 +1,7 @@
 BUILD_SLN=./jaytwo.DapperPlus.sln
 BUILD_DIRS=./src/jaytwo.DapperPlus:./src/jaytwo.DapperPlus.MySql:./src/jaytwo.DapperPlus.Postgres
 BUILD_TEST_DIRS=./test/jaytwo.DapperPlus.Tests
-ENABLE_COMPOSE_NETWORK=false
+ENABLE_COMPOSE_NETWORK=true
 
 NUGET_SOURCE_URL?=https://api.nuget.org/v3/index.json
 NUGET_API_KEY?=__missing_api_key__
