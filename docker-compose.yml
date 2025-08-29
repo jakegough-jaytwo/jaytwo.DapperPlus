@@ -49,6 +49,7 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile.postgres
+    restart: always
     profiles:
       - "testernet"
     expose:
@@ -63,6 +64,7 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile.mysql
+    restart: always
     profiles:
       - "testernet"
     expose:
@@ -77,12 +79,13 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile.sqlserver
+    restart: always
     profiles:
       - "testernet"
     expose:
       - "1433"
     healthcheck:
-      test: ["CMD-SHELL", "sqlcmd -S localhost -C -U sa -P $$MSSQL_SA_PASSWORD -l 1 -Q 'SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "sqlcmd -S localhost -C -U sa -P $$MSSQL_SA_PASSWORD -l 1 -Q 'SELECT 1'"]
       interval: 5s
       timeout: 3s
       retries: 20
