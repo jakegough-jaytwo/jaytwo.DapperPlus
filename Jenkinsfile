@@ -1,4 +1,5 @@
 library 'JenkinsBuilderLibrary'
 
 nugetProject.build(
-    gitHubRepository: 'jaytwo.DapperPlus')
+    gitHubRepository: 'jaytwo.DapperPlus',
+    enableTesterNet: true)
