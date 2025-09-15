@@ -1,5 +1,5 @@
+using System.Threading.Tasks;
 using jaytwo.DapperPlus.Postgres;
-using Npgsql;
 using Xunit;
 using Xunit.Abstractions;
 

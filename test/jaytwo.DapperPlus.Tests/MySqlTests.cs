@@ -1,5 +1,5 @@
+using System.Threading.Tasks;
 using jaytwo.DapperPlus.MySql;
-using MySql.Data.MySqlClient;
 using Xunit;
 using Xunit.Abstractions;
 

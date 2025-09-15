@@ -1,3 +1,5 @@
+using System;
+
 namespace jaytwo.DapperPlus.Tests.Data.Models;
 
 public class SampleRow

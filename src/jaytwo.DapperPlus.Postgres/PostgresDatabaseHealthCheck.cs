@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Npgsql;
 
 namespace jaytwo.DapperPlus.Postgres;

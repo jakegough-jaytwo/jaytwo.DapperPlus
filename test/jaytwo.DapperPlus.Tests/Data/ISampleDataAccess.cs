@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 using jaytwo.DapperPlus.Tests.Data.Models;
-using static Dapper.SqlMapper;
 
 namespace jaytwo.DapperPlus.Tests.Data;
 

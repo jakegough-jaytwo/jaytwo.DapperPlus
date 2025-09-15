@@ -1,5 +1,5 @@
+using System.Threading.Tasks;
 using jaytwo.DapperPlus.SqlServer;
-using Microsoft.Data.SqlClient;
 using Xunit;
 using Xunit.Abstractions;
 

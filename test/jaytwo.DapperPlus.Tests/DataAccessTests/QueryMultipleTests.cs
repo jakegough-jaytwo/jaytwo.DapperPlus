@@ -1,10 +1,12 @@
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using jaytwo.DapperPlus.Tests.Data;
 using Moq;
 using Xunit;
-using static Dapper.SqlMapper;
 
 namespace jaytwo.DapperPlus.Tests.DataAccessTests;
 

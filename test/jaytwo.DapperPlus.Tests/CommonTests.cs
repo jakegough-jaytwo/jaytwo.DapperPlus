@@ -1,8 +1,7 @@
-using System.Data;
-using System.Transactions;
+using System;
+using System.Threading.Tasks;
 using Dapper;
 using jaytwo.DapperPlus.Tests.Data;
-using jaytwo.DapperPlus.Tests.Data.Models;
 using Xunit;
 using Xunit.Abstractions;
 

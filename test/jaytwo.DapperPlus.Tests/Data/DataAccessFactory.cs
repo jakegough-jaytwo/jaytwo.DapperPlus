@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using jaytwo.DapperPlus.MySql;
 using jaytwo.DapperPlus.Postgres;
 using jaytwo.DapperPlus.SqlServer;
